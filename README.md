@@ -6,7 +6,7 @@ Docker container which runs the latest [qBittorrent](https://github.com/qbittorr
 
 # Features
 
-* Build for **amd64** and **armv7**
+* Build for **amd64**, **arm64**, **armv8** and **armv7**
 * Selectively enable or disable WireGuard or OpenVPN support
 * IP tables killswitch to prevent IP leaking when VPN connection fails
 * Configurable UID and GID for config files and /downloads for qBittorrent
