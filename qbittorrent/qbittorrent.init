@@ -1,0 +1,42 @@
+USER=${PUID}
+GROUP=${PGID}
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin"
+SCRIPTNAME="/etc/init.d/qbittorrent"
+NAME="qbittorrent"
+DESC="qbittorrent"
+PIDFILE="/var/run/$NAME.pid"
+QBITTORRENTLOGPATH="/config/qBittorrent/data/logs/"
+QBITTORRENTLOG="qbittorrent.log"
+
+DAEMON="/usr/local/bin/qbittorrent-nox"
+DAEMON_ARGS="--profile=/config"
+DAEMONSTRING="$DAEMON $DAEMON_ARGS >> $QBITTORRENTLOGPATH$QBITTORRENTLOG 2>&1"
+
+export DBUS_SESSION_BUS_ADDRESS=""
+
+umask 002
+
+# Check if log path exists. If it doesn't exist, create it.
+if [ ! -e $QBITTORRENTLOGPATH ]; then
+	mkdir -p $QBITTORRENTLOGPATH
+	chown -R ${PUID}:${PGID} /config/qBittorrent
+fi
+
+# Check for log file. If it doesn't exist, create it.
+if [ -f $QBITTORRENTLOGPATH$QBITTORRENTLOG ]; then
+	echo "Logging to $QBITTORRENTLOGPATH$QBITTORRENTLOG."
+else
+	echo "Log file $QBITTORRENTLOGPATH$QBITTORRENTLOG doesn't exist. Creating it..."
+	touch $QBITTORRENTLOGPATH$QBITTORRENTLOG
+	if [ -f $QBITTORRENTLOGPATH$QBITTORRENTLOG ]; then
+		chown $USER:$GROUP $QBITTORRENTLOGPATH$QBITTORRENTLOG
+		echo "Logfile created. Logging to $QBITTORRENTLOGPATH$QBITTORRENTLOG"
+	else
+		echo "Couldn't create logfile $QBITTORRENTLOGPATH$QBITTORRENTLOG. Please investigate."
+	fi
+fi
+
+su -m qbittorrent -s /bin/bash -c "$DAEMONSTRING"
+sleep 1
+echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Started qBittorrent successfully..."
