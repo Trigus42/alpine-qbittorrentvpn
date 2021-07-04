@@ -47,7 +47,7 @@ RUN \
 
     # Clean up
     apk del --no-cache --purge .build-deps; \
-    rm -rf qbittorrent* libtorrent* ninja* boost*; \
+    rm -rf ~/qbittorrent* ~/libtorrent* ~/ninja* ~/boost*; \
     rm -rf \
     /tmp/* \
     /var/tmp; \
