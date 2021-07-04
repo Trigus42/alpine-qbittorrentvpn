@@ -13,7 +13,7 @@ Docker container which runs the latest [qBittorrent](https://github.com/qbittorr
 * BitTorrent port 8999 exposed by default
 
 # Software
-* Base: alpine:latest
+* Base: alpine
 * [qBittorrent](https://github.com/qbittorrent/qBittorrent) compiled from source
 * [libtorrent](https://github.com/arvidn/libtorrent) compiled from source
 * WireGuard / OpenVPN
