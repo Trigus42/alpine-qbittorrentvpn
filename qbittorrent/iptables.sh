@@ -1,5 +1,4 @@
 #!/bin/bash
-# Forked from binhex's OpenVPN dockers
 # Wait until tunnel is up
 
 while : ; do
@@ -11,8 +10,8 @@ while : ; do
 	fi
 done
 
-# Get default interface (with lowest metric)
-docker_interface="$(ip route | awk 'FNR == 1 {print $(5)}')"
+# identify docker bridge interface name (probably eth0)
+docker_interface="$(netstat -ie | grep -vE "lo|tun|tap|wg" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${docker_interface}"
 fi
@@ -22,18 +21,6 @@ docker_ip="$(ip -4 addr show ${docker_interface} | grep -oP '(?<=inet\s)\d+(\.\d
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IP defined as ${docker_ip}"
 fi
-
-#docker_default_range="172.17.0.0/16"
-
-#for IP in ${docker_ip}; do
-#	grepcidr "$docker_default_range" <(echo "$IP") >/dev/null
-#	grepcidr_status=$?
-#	if [ "${grepcidr_status}" -eq 1 ]; then
-#		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] It seems like the IP the container is using outside the default Docker DHCP range"
-#		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Use bridge mode to run this container. Using a custom IP is not supported."
-#		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] IP of the container: ${docker_ip}"
-#	fi
-#done
 
 # identify netmask for docker bridge interface
 docker_mask=$(ifconfig "${docker_interface}" | grep -o "Mask:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
