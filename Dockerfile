@@ -1,12 +1,13 @@
-FROM alpine:latest
+FROM alpine:3.14
 
 RUN \
     apk -U upgrade; \
-    # Build dependencies
+
+    # Install build dependencies
     apk add --no-cache --virtual .build-deps autoconf automake build-base cmake curl git libtool linux-headers perl pkgconf python3 python3-dev re2c tar \
     icu-dev libexecinfo-dev openssl-dev qt5-qtbase-dev qt5-qttools-dev zlib-dev qt5-qtsvg-dev; \
 
-    # Ninja build
+    # Compile and install Ninja build
     git clone --shallow-submodules --recurse-submodules https://github.com/ninja-build/ninja.git ~/ninja && cd ~/ninja; \
     git checkout "$(git tag -l --sort=-v:refname "v*" | head -n 1)"; \
     cmake -Wno-dev -B build \
@@ -19,7 +20,7 @@ RUN \
     curl -sNLk https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz -o "$HOME/boost_1_76_0.tar.gz"; \
     tar xf "$HOME/boost_1_76_0.tar.gz" -C "$HOME"; \
 
-    # Libtorrent
+    # Compile and install Libtorrent
     git clone --shallow-submodules --recurse-submodules https://github.com/arvidn/libtorrent.git ~/libtorrent && cd ~/libtorrent; \
     git checkout "$(git tag -l --sort=-v:refname "v2*" | head -n 1)"; \
     cmake -Wno-dev -G Ninja -B build \
@@ -31,7 +32,7 @@ RUN \
     cmake --build build; \
     cmake --install build; \
 
-    # qBittorrent
+    # Compile and install qBittorrent
     git clone --shallow-submodules --recurse-submodules https://github.com/qbittorrent/qBittorrent.git ~/qbittorrent && cd ~/qbittorrent; \
     git checkout "$(git tag -l --sort=-v:refname | head -n 1)"; \
     cmake -Wno-dev -G Ninja -B build \
@@ -45,14 +46,13 @@ RUN \
     cmake --install build; \
 
     # Clean up
-    cd && rm -rf qbittorrent* libtorrent* ninja* boost*; \
     apk del --no-cache --purge .build-deps; \
+    rm -rf qbittorrent* libtorrent* ninja* boost*; \
     rm -rf \
     /tmp/* \
-    /var/tmp
+    /var/tmp; \
 
-
-RUN \
+    # Install tools needed at runtime
     apk add --no-cache \
     wireguard-tools \
     dos2unix \
@@ -72,8 +72,8 @@ RUN \
 
 VOLUME /config /downloads
 
-ADD openvpn/ /etc/openvpn/
-ADD qbittorrent/ /etc/qbittorrent/
+COPY openvpn/ /etc/openvpn/
+COPY qbittorrent/ /etc/qbittorrent/
 
 RUN chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh
 

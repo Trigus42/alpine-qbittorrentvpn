@@ -56,7 +56,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	chmod -R 775 "/config/${VPN_TYPE}" &> /dev/null
 	exit_code_chmod=$?
 	set -e
-	if (( ${exit_code_chown} != 0 || ${exit_code_chmod} != 0 )); then
+	if (( $exit_code_chown != 0 || $exit_code_chmod != 0 )); then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Unable to chown/chmod /config/${VPN_TYPE}/, assuming SMB mountpoint"
 	fi
 
@@ -102,7 +102,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
 
 			# Replace line with one that points to credentials.conf
-			auth_cred_exist=$(cat "${VPN_CONFIG}" | grep -m 1 'auth-user-pass')
+			auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
 			if [[ ! -z "${auth_cred_exist}" ]]; then
 				# Get line number of auth-user-pass
 				LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
@@ -118,9 +118,9 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	
 	# parse values from the ovpn or conf file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		export vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+		export vpn_remote_line=$((grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 	else
-		export vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~')
+		export vpn_remote_line=$((grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
 	fi
 
 	if [[ ! -z "${vpn_remote_line}" ]]; then
@@ -164,7 +164,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	fi
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		export VPN_PROTOCOL=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+		export VPN_PROTOCOL=$((grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 		if [[ ! -z "${VPN_PROTOCOL}" ]]; then
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
 		else
@@ -187,7 +187,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		VPN_DEVICE_TYPE=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+		VPN_DEVICE_TYPE=$((grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 		if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
 			export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
@@ -267,7 +267,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		cd /config/wireguard
-		if ip link | grep -q `basename -s .conf $VPN_CONFIG`; then
+		if ip link | grep -q $(basename -s .conf $VPN_CONFIG); then
 			wg-quick down $VPN_CONFIG || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi
