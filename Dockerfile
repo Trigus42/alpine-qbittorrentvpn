@@ -1,7 +1,7 @@
 FROM alpine:3.14
 
 RUN \
-    apk -U upgrade; \
+    apk update; \
 
     # Install build dependencies
     apk add --no-cache --virtual .build-deps autoconf automake build-base cmake curl git libtool linux-headers perl pkgconf python3 python3-dev re2c tar \
@@ -60,9 +60,18 @@ VOLUME /config /downloads
 COPY openvpn/ /etc/openvpn/
 COPY qbittorrent/ /etc/qbittorrent/
 
-RUN chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh
+RUN \
+    # Make scripts executable
+    chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh; \
 
+    # Modify wg-quick to run in unprivileged container
+    apk add --no-cache sed; \
+    sed -i -E 's/&& cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' $(command -v wg-quick); \
+    apk del --no-cache --purge sed
+
+# qBittorrent ports
 EXPOSE 8080
 EXPOSE 8999
 EXPOSE 8999/udp
+
 CMD ["/bin/bash", "/etc/openvpn/start.sh"]

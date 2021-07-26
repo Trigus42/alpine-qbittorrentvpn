@@ -26,29 +26,35 @@ I recommend building it yourself if you want to always get the most up to date i
 $ git clone https://github.com/trigus42/qbittorrentvpn
 $ cd qbittorrentvpn
 $ docker build -t qbittorrentvpn .
-$ docker run --privileged  -d \
-              -v /your/config/path/:/config \
-              -v /your/downloads/path/:/downloads \
-              -e "VPN_ENABLED=yes" \
-              -e "VPN_TYPE=wireguard" \
-              -e "LAN_NETWORK=192.168.0.0/24" \
-              -p 8080:8080 \
-              --restart unless-stopped \
-              qbittorrentvpn
+$ docker run -d \
+             -v /your/config/path/:/config \
+             -v /your/downloads/path/:/downloads \
+             -e "VPN_ENABLED=yes" \
+             -e "VPN_TYPE=wireguard" \
+             -e "LAN_NETWORK=192.168.0.0/24" \
+             -p 8080:8080 \
+             --restart unless-stopped \
+             --cap-add=NET_ADMIN \
+             --cap-add=SYS_MODULE \
+             --sysctl net.ipv4.conf.all.src_valid_mark=1 \
+             qbittorrentvpn
 ```
 
 The container is also available from the Docker registry:
 
 ```
-$ docker run --privileged  -d \
-              -v /your/config/path/:/config \
-              -v /your/downloads/path/:/downloads \
-              -e "VPN_ENABLED=yes" \
-              -e "VPN_TYPE=wireguard" \
-              -e "LAN_NETWORK=192.168.0.0/24" \
-              -p 8080:8080 \
-              --restart unless-stopped \
-              trigus42/qbittorrentvpn
+$ docker run -d \
+             -v /your/config/path/:/config \
+             -v /your/downloads/path/:/downloads \
+             -e "VPN_ENABLED=yes" \
+             -e "VPN_TYPE=wireguard" \
+             -e "LAN_NETWORK=192.168.0.0/24" \
+             -p 8080:8080 \
+             --restart unless-stopped \
+             --cap-add=NET_ADMIN \
+             --cap-add=SYS_MODULE \
+             --sysctl net.ipv4.conf.all.src_valid_mark=1 \
+             trigus42/qbittorrentvpn
 ```
 
 ## Docker Tags
