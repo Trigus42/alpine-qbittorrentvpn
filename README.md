@@ -5,7 +5,7 @@
 
 Docker container which runs the latest [qBittorrent](https://github.com/qbittorrent/qBittorrent)-nox client while connecting to WireGuard or OpenVPN with iptables killswitch to prevent IP leakage when the tunnel goes down.
 
-# Features
+## Features
 
 * Build for **amd64**, **arm64**, **armv8** and **armv7**
 * Selectively enable or disable WireGuard or OpenVPN support
@@ -13,13 +13,13 @@ Docker container which runs the latest [qBittorrent](https://github.com/qbittorr
 * Configurable UID and GID for config files and /downloads for qBittorrent
 * BitTorrent port 8999 exposed by default
 
-# Software
+## Software
 * Base: alpine
 * [qBittorrent](https://github.com/qbittorrent/qBittorrent) compiled from source
 * [libtorrent](https://github.com/arvidn/libtorrent) compiled from source
 * WireGuard / OpenVPN
 
-# Run container
+## Run container
 I recommend building it yourself if you want to always get the most up to date image:
 
 ```
@@ -64,8 +64,8 @@ $ docker run -d \
 | `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Alpine based image build on YYYYMMDD |
 | `trigus42/qbittorrentvpn:testing` | Unstable, untested image |
 
-# Variables, Volumes, and Ports
-## Environment Variables
+## Variables, Volumes, and Ports
+### Environment Variables
 | Variable | Required | Function | Example | Default |
 |----------|----------|----------|----------|----------|
 |`VPN_ENABLED`| Yes | Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
@@ -84,41 +84,41 @@ $ docker run -d \
 |`INSTALL_PYTHON3`| No |Set this to `yes` to let the container install Python3.|`INSTALL_PYTHON3=yes`|`no`|
 |`ADDITIONAL_PORTS`| No |Adding a comma delimited list of ports will allow these ports via the iptables script.|`ADDITIONAL_PORTS=1234,8112`||
 
-## Volumes
+### Volumes
 | Volume | Required | Function | Example |
 |----------|----------|----------|----------|
 | `config` | Yes | qBittorrent, WireGuard and OpenVPN config files | `/your/config/path/:/config`|
 | `downloads` | No | Default downloads path for saving downloads | `/your/downloads/path/:/downloads`|
 
-## Ports
+### Ports
 | Port | Proto | Required | Function | Example |
 |----------|----------|----------|----------|----------|
 | `8080` | TCP | Yes | qBittorrent WebUI | `8080:8080`|
 | `8999` | TCP | Yes | qBittorrent TCP Listening Port | `8999:8999`|
 | `8999` | UDP | Yes | qBittorrent UDP Listening Port | `8999:8999/udp`|
 
-# Access the WebUI
+## Access the WebUI
 Access https://IPADDRESS:PORT from a browser on the same network. (for example: https://192.168.0.90:8080)
 
-## Default Credentials
+### Default Credentials
 
 | Credential | Default Value |
 |----------|----------|
 |`username`| `admin` |
 |`password`| `adminadmin` |
 
-# How to use WireGuard 
+## How to use WireGuard 
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid .conf file present in the /config/wireguard directory. Drop a .conf file from your VPN provider into /config/wireguard and start the container again. The file must have the name `wg0.conf`, or it will fail to start.
 
-# How to use OpenVPN
+## How to use OpenVPN
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid .ovpn file present in the /config/openvpn directory. Drop a .ovpn file from your VPN provider into /config/openvpn (if necessary with additional files like certificates) and start the container again. You may need to edit the ovpn configuration file to load your VPN credentials from a file by setting `auth-user-pass`.
 
 **Note:** The script will use the first ovpn file it finds in the /config/openvpn directory. Adding multiple ovpn files will not start multiple VPN connections.
 
-## Example auth-user-pass option for .ovpn files
+### Example auth-user-pass option for .ovpn files
 `auth-user-pass credentials.conf`
 
-## Example credentials.conf
+### Example credentials.conf
 ```
 username
 password
@@ -131,12 +131,10 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 id <username>
 ```
 
-# Issues
+## Issues
 If you are having issues with this container please submit an issue on GitHub.  
 Please provide logs, Docker version and other information that can simplify reproducing the issue.  
 If possible, always use the most up to date version of Docker, you operating system, kernel and the container itself. Support is always a best-effort basis.
 
-### Credits:
-[MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn)  
-[DyonR/jackettvpn](https://github.com/DyonR/jackettvpn)  
-[DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn)
+## Credits:
+This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
