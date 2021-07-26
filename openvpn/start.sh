@@ -1,5 +1,4 @@
 #!/bin/bash
-# Forked from binhex's OpenVPN dockers
 set -e
 
 # check for presence of network interface docker0
@@ -20,19 +19,6 @@ else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_ENABLED not defined,(via -e VPN_ENABLED), defaulting to 'yes'"
 	export VPN_ENABLED="yes"
 fi
-
-# export LEGACY_IPTABLES=$(echo "${LEGACY_IPTABLES,,}")
-# echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LEGACY_IPTABLES is set to '${LEGACY_IPTABLES}'"
-# if [[ $LEGACY_IPTABLES == "1" || $LEGACY_IPTABLES == "true" || $LEGACY_IPTABLES == "yes" ]]; then
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy to /usr/sbin/iptables"
-#	ln -sf /usr/sbin/iptables-legacy /usr/sbin/iptables > /dev/null 2>&1
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy-save to /usr/sbin/iptables-save"
-#	ln -sf /usr/sbin/iptables-legacy-save /usr/sbin/iptables-save > /dev/null 2>&1
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy-restore to /usr/sbin/iptables-restore"
-#	ln -sf /usr/sbin/iptables-legacy-restore /usr/sbin/iptables-restore > /dev/null 2>&1
-# else
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Not making any changes to iptables"
-# fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
 	# Check if VPN_TYPE is set.
