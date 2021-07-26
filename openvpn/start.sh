@@ -12,6 +12,14 @@ if [[ ! -z "${check_network}" ]]; then
 	exit 1
 fi
 
+if [ "${UNPRIVILEGED}" == "yes" ]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged mode enabled"
+	/bin/bash /etc/qbittorrent/unprivileged.sh
+elif [ "${UNPRIVILEGED}" != "no" ]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged not set or invalid value, defaulting to privileged mode."
+	export UNPRIVILEGED=false
+fi
+
 export VPN_ENABLED=$(echo "${VPN_ENABLED,,}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${VPN_ENABLED}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_ENABLED defined as '${VPN_ENABLED}'"
@@ -253,7 +261,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		cd /config/wireguard
-		if ip link | grep -q $(basename -s .conf $VPN_CONFIG); then
+		if iplink | grep $(basename "$VPN_CONFIG" .conf); then
 			wg-quick down $VPN_CONFIG || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi

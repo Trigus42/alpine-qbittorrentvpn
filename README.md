@@ -20,8 +20,9 @@ Docker container which runs the latest [qBittorrent](https://github.com/qbittorr
 * WireGuard / OpenVPN
 
 ## Run container
-I recommend building it yourself if you want to always get the most up to date image:
-
+&NewLine;
+### Build it yourself
+&NewLine;
 ```
 $ git clone https://github.com/trigus42/qbittorrentvpn
 $ cd qbittorrentvpn
@@ -34,14 +35,11 @@ $ docker run -d \
              -e "LAN_NETWORK=192.168.0.0/24" \
              -p 8080:8080 \
              --restart unless-stopped \
-             --cap-add=NET_ADMIN \
-             --cap-add=SYS_MODULE \
-             --sysctl net.ipv4.conf.all.src_valid_mark=1 \
              qbittorrentvpn
 ```
 
-The container is also available from the Docker registry:
-
+### From the Docker registry
+&NewLine;
 ```
 $ docker run -d \
              -v /your/config/path/:/config \
@@ -51,10 +49,24 @@ $ docker run -d \
              -e "LAN_NETWORK=192.168.0.0/24" \
              -p 8080:8080 \
              --restart unless-stopped \
-             --cap-add=NET_ADMIN \
-             --cap-add=SYS_MODULE \
-             --sysctl net.ipv4.conf.all.src_valid_mark=1 \
              trigus42/qbittorrentvpn
+```
+
+### Run in unprivileged mode
+&NewLine;
+#### Wireguard:
+&NewLine;
+```sh
+-e "UNPRIVILEGED=yes" \
+--cap-add=NET_ADMIN \
+--cap-add=SYS_MODULE \
+--sysctl net.ipv4.conf.all.src_valid_mark=1 \
+```
+
+#### OpenVPN:
+&NewLine;
+```sh
+--cap-add=NET_ADMIN \
 ```
 
 ## Docker Tags
@@ -68,6 +80,7 @@ $ docker run -d \
 ### Environment Variables
 | Variable | Required | Function | Example | Default |
 |----------|----------|----------|----------|----------|
+|`UNPRIVILEGED`| No | Allows container to run in unprivileged mode when wireguard is used |`UNPRIVILEGED=yes`|`no`|
 |`VPN_ENABLED`| Yes | Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
 |`VPN_TYPE`| Yes | WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=wireguard`|`openvpn`|
 |`VPN_USERNAME`| No | If username and password provided, configures ovpn file automatically |`VPN_USERNAME=ad8f64c02a2de`||

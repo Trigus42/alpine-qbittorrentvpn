@@ -14,6 +14,7 @@ services:
       - HEALTH_CHECK_HOST=one.one.one.one
       - HEALTH_CHECK_INTERVAL=300
       - ENABLE_SSL=yes
+      - UNPRIVILEGED=yes
     volumes:
       - '/server/qbittorrent/:/config'
     ports:

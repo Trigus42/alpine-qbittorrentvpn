@@ -60,14 +60,8 @@ VOLUME /config /downloads
 COPY openvpn/ /etc/openvpn/
 COPY qbittorrent/ /etc/qbittorrent/
 
-RUN \
-    # Make scripts executable
-    chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh; \
-
-    # Modify wg-quick to run in unprivileged container
-    apk add --no-cache sed; \
-    sed -i -E 's/&& cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' $(command -v wg-quick); \
-    apk del --no-cache --purge sed
+# Make scripts executable
+RUN chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh
 
 # qBittorrent ports
 EXPOSE 8080
