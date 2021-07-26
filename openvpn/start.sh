@@ -1,5 +1,4 @@
 #!/bin/bash
-# Forked from binhex's OpenVPN dockers
 set -e
 
 # check for presence of network interface docker0
@@ -13,6 +12,14 @@ if [[ ! -z "${check_network}" ]]; then
 	exit 1
 fi
 
+if [ "${UNPRIVILEGED}" == "yes" ]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged mode enabled"
+	/bin/bash /etc/qbittorrent/unprivileged.sh
+elif [ "${UNPRIVILEGED}" != "no" ]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged not set or invalid value, defaulting to privileged mode."
+	export UNPRIVILEGED=false
+fi
+
 export VPN_ENABLED=$(echo "${VPN_ENABLED,,}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${VPN_ENABLED}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_ENABLED defined as '${VPN_ENABLED}'"
@@ -20,19 +27,6 @@ else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_ENABLED not defined,(via -e VPN_ENABLED), defaulting to 'yes'"
 	export VPN_ENABLED="yes"
 fi
-
-# export LEGACY_IPTABLES=$(echo "${LEGACY_IPTABLES,,}")
-# echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LEGACY_IPTABLES is set to '${LEGACY_IPTABLES}'"
-# if [[ $LEGACY_IPTABLES == "1" || $LEGACY_IPTABLES == "true" || $LEGACY_IPTABLES == "yes" ]]; then
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy to /usr/sbin/iptables"
-#	ln -sf /usr/sbin/iptables-legacy /usr/sbin/iptables > /dev/null 2>&1
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy-save to /usr/sbin/iptables-save"
-#	ln -sf /usr/sbin/iptables-legacy-save /usr/sbin/iptables-save > /dev/null 2>&1
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Linking /usr/sbin/iptables-legacy-restore to /usr/sbin/iptables-restore"
-#	ln -sf /usr/sbin/iptables-legacy-restore /usr/sbin/iptables-restore > /dev/null 2>&1
-# else
-#	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Not making any changes to iptables"
-# fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
 	# Check if VPN_TYPE is set.
@@ -267,7 +261,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		cd /config/wireguard
-		if ip link | grep -q $(basename -s .conf $VPN_CONFIG); then
+		if iplink | grep $(basename "$VPN_CONFIG" .conf); then
 			wg-quick down $VPN_CONFIG || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi

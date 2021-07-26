@@ -1,7 +1,7 @@
 FROM alpine:3.14
 
 RUN \
-    apk -U upgrade; \
+    apk update; \
 
     # Install build dependencies
     apk add --no-cache --virtual .build-deps autoconf automake build-base cmake curl git libtool linux-headers perl pkgconf python3 python3-dev re2c tar \
@@ -60,9 +60,12 @@ VOLUME /config /downloads
 COPY openvpn/ /etc/openvpn/
 COPY qbittorrent/ /etc/qbittorrent/
 
+# Make scripts executable
 RUN chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh
 
+# qBittorrent ports
 EXPOSE 8080
 EXPOSE 8999
 EXPOSE 8999/udp
+
 CMD ["/bin/bash", "/etc/openvpn/start.sh"]
