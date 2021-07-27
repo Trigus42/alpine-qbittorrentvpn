@@ -23,11 +23,11 @@ Docker container which runs the latest [qBittorrent](https://github.com/qbittorr
 &NewLine;
 ### Build it yourself
 &NewLine;
-```
-$ git clone https://github.com/trigus42/qbittorrentvpn
+```sh
+$ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
 $ cd qbittorrentvpn
 $ docker build -t qbittorrentvpn .
-$ docker run -d \
+$ docker run --privileged -d \
              -v /your/config/path/:/config \
              -v /your/downloads/path/:/downloads \
              -e "VPN_ENABLED=yes" \
@@ -40,8 +40,8 @@ $ docker run -d \
 
 ### From the Docker registry
 &NewLine;
-```
-$ docker run -d \
+```sh
+$ docker run --privileged -d \
              -v /your/config/path/:/config \
              -v /your/downloads/path/:/downloads \
              -e "VPN_ENABLED=yes" \
@@ -53,6 +53,8 @@ $ docker run -d \
 ```
 
 ### Run in unprivileged mode
+(Omit the `--privileged` flag - mainly for security)
+
 &NewLine;
 #### Wireguard:
 &NewLine;
@@ -140,7 +142,7 @@ password
 ## PUID/PGID
 User ID (PUID) and Group ID (PGID) can be found by issuing the following command for the user you want to run the container as:
 
-```
+```sh
 id <username>
 ```
 
