@@ -3,7 +3,7 @@
 [![Docker Pulls](https://badgen.net/docker/pulls/trigus42/qbittorrentvpn)](https://hub.docker.com/r/trigus42/qbittorrentvpn)
 [![Docker Image Size (tag)](https://badgen.net/docker/size/trigus42/qbittorrentvpn/latest)](https://hub.docker.com/r/trigus42/qbittorrentvpn)
 
-Docker container which runs the latest [qBittorrent](https://github.com/qbittorrent/qBittorrent)-nox client while connecting to WireGuard or OpenVPN with iptables killswitch to prevent IP leakage when the tunnel goes down.
+Docker container which runs the latest qBittorrent-nox client while connecting to WireGuard or OpenVPN with iptables killswitch to prevent IP leakage when the tunnel goes down.
 
 ## Features
 
@@ -75,7 +75,8 @@ $ docker run --privileged -d \
 | Tag | Description |
 |----------|----------|
 | `trigus42/qbittorrentvpn` | The latest image tested on amd64 and armv7 |
-| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Alpine based image build on YYYYMMDD |
+| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent |
+| `trigus42/qbittorrentvpn:qbtx.x.x` | Image build with version x.x.x of qBittorrent |
 | `trigus42/qbittorrentvpn:testing` | Unstable, untested image |
 
 ## Variables, Volumes, and Ports
