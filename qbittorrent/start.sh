@@ -4,17 +4,17 @@ if [[ ! -e /config/qBittorrent/config ]]; then
 	mkdir -p /config/qBittorrent/config
 fi
 # Set the correct rights accordingly to the PUID and PGID on /config/qBittorrent
-chown -R ${PUID}:${PGID} /config/qBittorrent
+chown -R "${PUID}":"${PGID}" /config/qBittorrent
 
 # Set the rights on the /downloads folder
-chown -R ${PUID}:${PGID} /downloads
+chown -R "${PUID}":"${PGID}" /downloads
 
 # Check if qBittorrent.conf exists, if not, copy the template over
 if [ ! -e /config/qBittorrent/config/qBittorrent.conf ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] qBittorrent.conf is missing, this is normal for the first launch! Copying template."
 	cp /etc/qbittorrent/qBittorrent.conf /config/qBittorrent/config/qBittorrent.conf
 	chmod 755 /config/qBittorrent/config/qBittorrent.conf
-	chown ${PUID}:${PGID} /config/qBittorrent/config/qBittorrent.conf
+	chown "${PUID}":"${PGID}" /config/qBittorrent/config/qBittorrent.conf
 fi
 
 export INSTALL_PYTHON3=$(echo "${INSTALL_PYTHON3,,}")
@@ -33,11 +33,11 @@ if [[ ${ENABLE_SSL} == 'yes' ]]; then
 	if [ ! -e /config/qBittorrent/config/WebUICertificate.crt ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] WebUI Certificate is missing, generating a new Certificate and Key"
 		openssl req -new -x509 -nodes -out /config/qBittorrent/config/WebUICertificate.crt -keyout /config/qBittorrent/config/WebUIKey.key -subj "/C=NL/ST=localhost/L=localhost/O=/OU=/CN="
-		chown -R ${PUID}:${PGID} /config/qBittorrent/config
+		chown -R "${PUID}":"${PGID}" /config/qBittorrent/config
 	elif [ ! -e /config/qBittorrent/config/WebUIKey.key ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] WebUI Key is missing, generating a new Certificate and Key"
 		openssl req -new -x509 -nodes -out /config/qBittorrent/config/WebUICertificate.crt -keyout /config/qBittorrent/config/WebUIKey.key -subj "/C=NL/ST=localhost/L=localhost/O=/OU=/CN="
-		chown -R ${PUID}:${PGID} /config/qBittorrent/config
+		chown -R "${PUID}":"${PGID}" /config/qBittorrent/config
 	fi
 	if grep -Fxq 'WebUI\HTTPS\CertificatePath=/config/qBittorrent/config/WebUICertificate.crt' "/config/qBittorrent/config/qBittorrent.conf"; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] /config/qBittorrent/config/qBittorrent.conf already has the line WebUICertificate.crt loaded, nothing to do."
@@ -82,11 +82,11 @@ if [ $? -eq 0 ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID already exists in /etc/passwd, nothing to do."
 else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID does not exist, adding an user called 'qbittorrent user' with PUID $PUID"
-	adduser -D -g qbittorrent -u $PUID qbittorrent
+	adduser -D -g qbittorrent -u "$PUID" qbittorrent
 fi
 
 # Set the umask
-if [[ ! -z "${UMASK}" ]]; then
+if [[ -n "${UMASK}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] UMASK defined as '${UMASK}'"
 	export UMASK=$(echo "${UMASK}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 else
@@ -105,7 +105,7 @@ qbittorrentpid=$(pgrep -o qbittorrent-nox)
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] qBittorrent PID: $qbittorrentpid"
 
 # If the process exists, make sure that the log file has the proper rights and start the health check
-if [ -e /proc/$qbittorrentpid ]; then
+if [ -e /proc/"$qbittorrentpid" ]; then
 	if [[ -e /config/qBittorrent/data/logs/qbittorrent.log ]]; then
 		chmod 775 /config/qBittorrent/data/logs/qbittorrent.log
 	else

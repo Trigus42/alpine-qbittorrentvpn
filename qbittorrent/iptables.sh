@@ -3,7 +3,7 @@
 
 while : ; do
 	tunnelstat=$(netstat -ie | grep -E "tun|tap|wg")
-	if [[ ! -z "${tunnelstat}" ]]; then
+	if [[ -n "${tunnelstat}" ]]; then
 		break
 	else
 		sleep 1
@@ -17,7 +17,7 @@ if [[ "${DEBUG}" == "true" ]]; then
 fi
 
 # identify ip for docker bridge interface
-docker_ip="$(ip -4 addr show ${docker_interface} | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
+docker_ip="$(ip -4 addr show "${docker_interface}" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IP defined as ${docker_ip}"
 fi
@@ -74,7 +74,7 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	echo "8080    webui" >> /etc/iproute2/rt_tables
 	echo "8999    webui" >> /etc/iproute2/rt_tables
 	ip rule add fwmark 1 table webui
-	ip route add default via ${DEFAULT_GATEWAY} table webui
+	ip route add default via "${DEFAULT_GATEWAY}" table webui
 fi
 
 # input iptable rules
@@ -93,14 +93,14 @@ iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -j ACCEPT
 iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
 
 # accept input to vpn gateway
-iptables -A INPUT -i "${docker_interface}" -p $VPN_PROTOCOL --sport $VPN_PORT -j ACCEPT
+iptables -A INPUT -i "${docker_interface}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -j ACCEPT
 
 # accept input to qBittorrent webui port
 iptables -A INPUT -i "${docker_interface}" -p tcp --dport 8080 -j ACCEPT
 iptables -A INPUT -i "${docker_interface}" -p tcp --sport 8080 -j ACCEPT
 
 # additional port list for scripts or container linking
-if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
+if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 	# split comma separated string into list from ADDITIONAL_PORTS env variable
 	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
 
@@ -140,7 +140,7 @@ iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -j ACCEPT
 iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
 
 # accept output from vpn gateway
-iptables -A OUTPUT -o "${docker_interface}" -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
+iptables -A OUTPUT -o "${docker_interface}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -j ACCEPT
 
 # if iptable mangle is available (kernel module) then use mark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
@@ -154,7 +154,7 @@ iptables -A OUTPUT -o "${docker_interface}" -p tcp --dport 8080 -j ACCEPT
 iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 8080 -j ACCEPT
 
 # additional port list for scripts or container linking
-if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
+if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 	# split comma separated string into list from ADDITIONAL_PORTS env variable
 	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
 

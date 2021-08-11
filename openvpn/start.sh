@@ -5,7 +5,7 @@ set -e
 check_network=$(ifconfig | grep docker0 || true)
 
 # if network interface docker0 is present then we are running in host mode and thus must exit
-if [[ ! -z "${check_network}" ]]; then
+if [[ -n "${check_network}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode"
 	# Sleep so it wont 'spam restart'
 	sleep 10
@@ -21,7 +21,7 @@ elif [ "${UNPRIVILEGED}" != "no" ]; then
 fi
 
 export VPN_ENABLED=$(echo "${VPN_ENABLED,,}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-if [[ ! -z "${VPN_ENABLED}" ]]; then
+if [[ -n "${VPN_ENABLED}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_ENABLED defined as '${VPN_ENABLED}'"
 else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_ENABLED not defined,(via -e VPN_ENABLED), defaulting to 'yes'"
@@ -87,7 +87,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		if [[ ! -z "${VPN_USERNAME}" ]] && [[ ! -z "${VPN_PASSWORD}" ]]; then
+		if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
 			if [[ ! -e /config/openvpn/credentials.conf ]]; then
 				touch /config/openvpn/credentials.conf
 			fi
@@ -97,7 +97,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 			# Replace line with one that points to credentials.conf
 			auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
-			if [[ ! -z "${auth_cred_exist}" ]]; then
+			if [[ -n "${auth_cred_exist}" ]]; then
 				# Get line number of auth-user-pass
 				LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
 				sed -i "${LINE_NUM}s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
@@ -112,12 +112,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	
 	# parse values from the ovpn or conf file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		export vpn_remote_line=$((grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+		export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 	else
-		export vpn_remote_line=$((grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
+		export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
 	fi
 
-	if [[ ! -z "${vpn_remote_line}" ]]; then
+	if [[ -n "${vpn_remote_line}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line, showing contents of file before exit..."
@@ -133,7 +133,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '^[^:\r\n]+')
 	fi
 
-	if [[ ! -z "${VPN_REMOTE}" ]]; then
+	if [[ -n "${VPN_REMOTE}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_REMOTE defined as '${VPN_REMOTE}'"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_REMOTE not found in ${VPN_CONFIG}, exiting..."
@@ -148,7 +148,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=:)\d{2,5}(?=:)?+')
 	fi
 
-	if [[ ! -z "${VPN_PORT}" ]]; then
+	if [[ -n "${VPN_PORT}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PORT defined as '${VPN_PORT}'"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_PORT not found in ${VPN_CONFIG}, exiting..."
@@ -158,12 +158,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	fi
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		export VPN_PROTOCOL=$((grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
-		if [[ ! -z "${VPN_PROTOCOL}" ]]; then
+		export VPN_PROTOCOL=$( (grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+		if [[ -n "${VPN_PROTOCOL}" ]]; then
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
 		else
 			export VPN_PROTOCOL=$(echo "${vpn_remote_line}" | grep -P -o -m 1 'udp|tcp-client|tcp$' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-			if [[ ! -z "${VPN_PROTOCOL}" ]]; then
+			if [[ -n "${VPN_PROTOCOL}" ]]; then
 				echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
 			else
 				echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_PROTOCOL not found in ${VPN_CONFIG}, assuming udp"
@@ -181,8 +181,8 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		VPN_DEVICE_TYPE=$((grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
-		if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
+		VPN_DEVICE_TYPE=$( (grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+		if [[ -n "${VPN_DEVICE_TYPE}" ]]; then
 			export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
 		else
@@ -198,7 +198,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	# get values from env vars as defined by user
 	export LAN_NETWORK=$(echo "${LAN_NETWORK}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-	if [[ ! -z "${LAN_NETWORK}" ]]; then
+	if [[ -n "${LAN_NETWORK}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LAN_NETWORK defined as '${LAN_NETWORK}'"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] LAN_NETWORK not defined (via -e LAN_NETWORK), exiting..."
@@ -208,7 +208,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	fi
 
 	export NAME_SERVERS=$(echo "${NAME_SERVERS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-	if [[ ! -z "${NAME_SERVERS}" ]]; then
+	if [[ -n "${NAME_SERVERS}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] NAME_SERVERS defined as '${NAME_SERVERS}'"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] NAME_SERVERS not defined (via -e NAME_SERVERS), defaulting to CloudFlare and Google name servers"
@@ -217,7 +217,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		export VPN_OPTIONS=$(echo "${VPN_OPTIONS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-		if [[ ! -z "${VPN_OPTIONS}" ]]; then
+		if [[ -n "${VPN_OPTIONS}" ]]; then
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_OPTIONS defined as '${VPN_OPTIONS}'"
 		else
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_OPTIONS not defined (via -e VPN_OPTIONS)"
@@ -262,10 +262,10 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		cd /config/wireguard
 		if iplink | grep $(basename "$VPN_CONFIG" .conf); then
-			wg-quick down $VPN_CONFIG || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
+			wg-quick down "$VPN_CONFIG" || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi
-		wg-quick up $VPN_CONFIG
+		wg-quick up "$VPN_CONFIG"
 		#exec /bin/bash /etc/openvpn/openvpn.init start &
 	fi
 	exec /bin/bash /etc/qbittorrent/iptables.sh
