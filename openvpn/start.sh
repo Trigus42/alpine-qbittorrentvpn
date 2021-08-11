@@ -244,12 +244,12 @@ done
 
 if [[ -z "${PUID}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PUID not defined. Defaulting to root user"
-	export PUID="root"
+	export PUID="1001"
 fi
 
 if [[ -z "${PGID}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PGID not defined. Defaulting to root group"
-	export PGID="root"
+	export PGID="1001"
 fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
