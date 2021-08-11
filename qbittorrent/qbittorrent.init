@@ -1,3 +1,5 @@
+#!/bin/bash
+
 USER=${PUID}
 GROUP=${PGID}
 
@@ -20,7 +22,7 @@ umask 002
 # Check if log path exists. If it doesn't exist, create it.
 if [ ! -e $QBITTORRENTLOGPATH ]; then
 	mkdir -p $QBITTORRENTLOGPATH
-	chown -R ${PUID}:${PGID} /config/qBittorrent
+	chown -R "${PUID}":"${PGID}" /config/qBittorrent
 fi
 
 # Check for log file. If it doesn't exist, create it.
@@ -30,7 +32,7 @@ else
 	echo "Log file $QBITTORRENTLOGPATH$QBITTORRENTLOG doesn't exist. Creating it..."
 	touch $QBITTORRENTLOGPATH$QBITTORRENTLOG
 	if [ -f $QBITTORRENTLOGPATH$QBITTORRENTLOG ]; then
-		chown $USER:$GROUP $QBITTORRENTLOGPATH$QBITTORRENTLOG
+		chown "$USER":"$GROUP" $QBITTORRENTLOGPATH$QBITTORRENTLOG
 		echo "Logfile created. Logging to $QBITTORRENTLOGPATH$QBITTORRENTLOG"
 	else
 		echo "Couldn't create logfile $QBITTORRENTLOGPATH$QBITTORRENTLOG. Please investigate."
