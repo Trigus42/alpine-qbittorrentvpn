@@ -75,9 +75,9 @@ $ docker run --privileged -d \
 | Tag | Description |
 |----------|----------|
 | `trigus42/qbittorrentvpn` | The latest image tested on amd64 and armv7 |
-| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent |
+| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent (e.g. for reproducable compose deployments) |
 | `trigus42/qbittorrentvpn:qbtx.x.x` | Image build with version x.x.x of qBittorrent |
-| `trigus42/qbittorrentvpn:testing` | Unstable, untested image |
+| `trigus42/qbittorrentvpn:testing` | Unstable, untested image (not recommended) |
 
 ## Variables, Volumes, and Ports
 ### Environment Variables
@@ -153,4 +153,4 @@ Please provide logs, Docker version and other information that can simplify repr
 If possible, always use the most up to date version of Docker, you operating system, kernel and the container itself. Support is always a best-effort basis.
 
 ## Credits:
-This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
+This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off on [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
