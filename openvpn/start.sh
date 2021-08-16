@@ -255,6 +255,13 @@ fi
 if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
+
+		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
+		mkdir -p /dev/net
+		if [ ! -c /dev/net/tun ]; then
+			mknod /dev/net/tun c 10 200
+		fi
+
 		cd /config/openvpn
 		exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
 		#exec /bin/bash /etc/openvpn/openvpn.init start &
