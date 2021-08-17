@@ -81,7 +81,7 @@ grep $"${PUID}:" /etc/passwd > /dev/null 2>&1
 if [ $? -eq 0 ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID already exists in /etc/passwd, nothing to do."
 else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID does not exist, adding an user called 'qbittorrent user' with PUID $PUID"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID does not exist, adding an user called 'qbittorrent' with PUID $PUID"
 	adduser -D -g qbittorrent -u "$PUID" qbittorrent
 fi
 
@@ -96,7 +96,7 @@ fi
 
 # Start qBittorrent
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting qBittorrent..."
-/bin/bash /etc/qbittorrent/qbittorrent.init &
+/bin/bash /init/qbittorrent.init &
 chmod -R 755 /config/qBittorrent
 
 # Wait a second for it to start up and get the process id

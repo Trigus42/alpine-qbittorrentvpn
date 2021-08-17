@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# check for presence of network interface docker0
+# Check for presence of network interface docker0
 check_network=$(ifconfig | grep docker0 || true)
 
-# if network interface docker0 is present then we are running in host mode and thus must exit
+# If network interface docker0 is present then we are running in host mode and thus must exit
 if [[ -n "${check_network}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode"
 	# Sleep so it wont 'spam restart'
@@ -12,9 +12,24 @@ if [[ -n "${check_network}" ]]; then
 	exit 1
 fi
 
+# PUID/PGID
+if [[ -z "${PUID}" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PUID not defined. Defaulting to 1001"
+	export PUID="1001"
+else
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PUID defined as $PUID"
+fi
+if [[ -z "${PGID}" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PGID not defined. Defaulting to 1001"
+	export PGID="1001"
+else
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PGID defined as $PGID"
+fi
+
+# Unprivileged mode
 if [ "${UNPRIVILEGED}" == "yes" ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged mode enabled"
-	/bin/bash /etc/qbittorrent/unprivileged.sh
+	/bin/bash /init/unprivileged.sh
 elif [ "${UNPRIVILEGED}" != "no" ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Unprivileged not set or invalid value, defaulting to privileged mode."
 	export UNPRIVILEGED=false
@@ -31,16 +46,17 @@ fi
 if [[ $VPN_ENABLED == "yes" ]]; then
 	# Check if VPN_TYPE is set.
 	if [[ -z "${VPN_TYPE}" ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_TYPE not set, defaulting to OpenVPN."
-		export VPN_TYPE="openvpn"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_TYPE not set, defaulting to Wireguard."
+		export VPN_TYPE="wireguard"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_TYPE defined as '${VPN_TYPE}'"
 	fi
 
 	if [[ "${VPN_TYPE}" != "openvpn" && "${VPN_TYPE}" != "wireguard" ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_TYPE not set, as 'wireguard' or 'openvpn', defaulting to OpenVPN."
-		export VPN_TYPE="openvpn"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_TYPE not set, as 'wireguard' or 'openvpn', defaulting to Wireguard."
+		export VPN_TYPE="wireguard"
 	fi
+
 	# Create the directory to store OpenVPN or WireGuard config files
 	mkdir -p /config/${VPN_TYPE}
 	# Set permmissions and owner for files in /config/openvpn or /config/wireguard directory
@@ -61,7 +77,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export VPN_CONFIG=$(find /config/wireguard -maxdepth 1 -name "*.conf" -print -quit)
 	fi
 
-	# If ovpn file not found in /config/openvpn or /config/wireguard then exit
+	# If VPN config file not found in /config/openvpn or /config/wireguard then exit
 	if [[ -z "${VPN_CONFIG}" ]]; then
 		if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 			echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No OpenVPN config file found in /config/openvpn/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.ovpn'"
@@ -87,15 +103,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
-			if [[ ! -e /config/openvpn/credentials.conf ]]; then
-				touch /config/openvpn/credentials.conf
-			fi
-
-			echo "${VPN_USERNAME}" > /config/openvpn/credentials.conf
-			echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
-
-			# Replace line with one that points to credentials.conf
+		# Replace line with one that points to credentials.conf
 			auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
 			if [[ -n "${auth_cred_exist}" ]]; then
 				# Get line number of auth-user-pass
@@ -104,13 +112,20 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			else
 				sed -i "1s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
 			fi
+
+		if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
+			if [[ ! -e /config/openvpn/credentials.conf ]]; then
+				touch /config/openvpn/credentials.conf
+			fi
+			echo "${VPN_USERNAME}" > /config/openvpn/credentials.conf
+			echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
 		fi
 	fi
 	
-	# convert CRLF (windows) to LF (unix) for ovpn
+	# Convert CRLF (windows) to LF (unix) for ovpn
 	dos2unix "${VPN_CONFIG}" 1> /dev/null
 	
-	# parse values from the ovpn or conf file
+	# Parse values from the ovpn or conf file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 	else
@@ -170,7 +185,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 				export VPN_PROTOCOL="udp"
 			fi
 		fi
-		# required for use in iptables
+		# Required for use in iptables
 		if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
 			export VPN_PROTOCOL="tcp"
 		fi
@@ -230,10 +245,10 @@ elif [[ $VPN_ENABLED == "no" ]]; then
 fi
 
 
-# split comma seperated string into list from NAME_SERVERS env variable
+# Split comma seperated string into list from NAME_SERVERS env variable
 IFS=',' read -ra name_server_list <<< "${NAME_SERVERS}"
 
-# process name servers in the list
+# Process name servers in the list
 for name_server_item in "${name_server_list[@]}"; do
 	# strip whitespace from start and end of lan_network_item
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
@@ -241,16 +256,6 @@ for name_server_item in "${name_server_list[@]}"; do
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${name_server_item} to resolv.conf"
 	echo "nameserver ${name_server_item}" >> /etc/resolv.conf
 done
-
-if [[ -z "${PUID}" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PUID not defined. Defaulting to root user"
-	export PUID="1001"
-fi
-
-if [[ -z "${PGID}" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] PGID not defined. Defaulting to root group"
-	export PGID="1001"
-fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -263,8 +268,11 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		fi
 
 		cd /config/openvpn
-		exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
-		#exec /bin/bash /etc/openvpn/openvpn.init start &
+		if [[ "${VPN_OPTIONS}" != "" ]]; then
+			exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 "${VPN_OPTIONS}" --config "${VPN_CONFIG}" &
+		else
+			exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
+		fi
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		cd /config/wireguard
@@ -273,9 +281,8 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi
 		wg-quick up "$VPN_CONFIG"
-		#exec /bin/bash /etc/openvpn/openvpn.init start &
 	fi
-	exec /bin/bash /etc/qbittorrent/iptables.sh
+	exec /bin/bash /init/iptables.sh
 else
-	exec /bin/bash /etc/qbittorrent/start.sh
+	exec /bin/bash /init/qbittorrent.sh
 fi

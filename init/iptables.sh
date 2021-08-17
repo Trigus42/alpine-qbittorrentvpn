@@ -184,4 +184,4 @@ echo "--------------------"
 iptables -S
 echo "--------------------"
 
-exec /bin/bash /etc/qbittorrent/start.sh
+exec /bin/bash /init/qbittorrent.sh
