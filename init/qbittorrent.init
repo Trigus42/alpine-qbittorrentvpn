@@ -39,6 +39,8 @@ else
 	fi
 fi
 
+set -e
+
 su -m qbittorrent -s /bin/bash -c "$DAEMONSTRING"
 sleep 1
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Started qBittorrent successfully..."

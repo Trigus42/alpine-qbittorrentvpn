@@ -35,10 +35,12 @@ RUN \
     rm -rf ~/qbittorrent* ~/libtorrent*; \
     rm -rf \
     /tmp/* \
-    /var/tmp; \
+    /var/tmp
 
+RUN \
     # Install tools needed at runtime
     apk add --no-cache \
+    bash \
     wireguard-tools \
     dos2unix \
     openvpn \
@@ -53,19 +55,18 @@ RUN \
     libexecinfo; \
 
     # Create directories
-    mkdir -p /downloads /config/qBittorrent /etc/openvpn /etc/qbittorrent
+    mkdir -p /downloads /config/qBittorrent /init
 
 VOLUME /config /downloads
 
-COPY openvpn/ /etc/openvpn/
-COPY qbittorrent/ /etc/qbittorrent/
+COPY init/ /init
 
 # Make scripts executable
-RUN chmod +x /etc/qbittorrent/*.sh /etc/openvpn/*.sh
+RUN chmod +x /init/*.sh
 
 # qBittorrent ports
 EXPOSE 8080
 EXPOSE 8999
 EXPOSE 8999/udp
 
-CMD ["/bin/bash", "/etc/openvpn/start.sh"]
+CMD ["/bin/bash", "/init/init.sh"]

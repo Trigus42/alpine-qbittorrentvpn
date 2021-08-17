@@ -85,7 +85,7 @@ $ docker run --privileged -d \
 |----------|----------|----------|----------|----------|
 |`UNPRIVILEGED`| No | Allows container to run in unprivileged mode when wireguard is used |`UNPRIVILEGED=yes`|`no`|
 |`VPN_ENABLED`| Yes | Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
-|`VPN_TYPE`| Yes | WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=wireguard`|`openvpn`|
+|`VPN_TYPE`| Yes | WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=openvpn`|`wireguard`|
 |`VPN_USERNAME`| No | If username and password provided, configures ovpn file automatically |`VPN_USERNAME=ad8f64c02a2de`||
 |`VPN_PASSWORD`| No | If username and password provided, configures ovpn file automatically |`VPN_PASSWORD=ac98df79ed7fb`||
 |`LAN_NETWORK`| Yes (atleast one) | Comma delimited local Network's with CIDR notation |`LAN_NETWORK=192.168.0.0/24,10.10.0.0/24`||
@@ -127,17 +127,14 @@ Access https://IPADDRESS:PORT from a browser on the same network. (for example: 
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid .conf file present in the /config/wireguard directory. Drop a .conf file from your VPN provider into /config/wireguard and start the container again. The file must have the name `wg0.conf`, or it will fail to start.
 
 ## How to use OpenVPN
-The container will fail to boot if `VPN_ENABLED` is set and there is no valid .ovpn file present in the /config/openvpn directory. Drop a .ovpn file from your VPN provider into /config/openvpn (if necessary with additional files like certificates) and start the container again. You may need to edit the ovpn configuration file to load your VPN credentials from a file by setting `auth-user-pass`.
+The container will fail to boot if `VPN_ENABLED` is set and there is no valid .ovpn file present in the /config/openvpn directory. Drop a .ovpn file from your VPN provider into /config/openvpn (if necessary with additional files like certificates) and start the container again. You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD` or manually store your VPN credentials in `openvpn/credentials.conf`.
 
 **Note:** The script will use the first ovpn file it finds in the /config/openvpn directory. Adding multiple ovpn files will not start multiple VPN connections.
 
-### Example auth-user-pass option for .ovpn files
-`auth-user-pass credentials.conf`
-
 ### Example credentials.conf
 ```
-username
-password
+YOURUSERNAME
+YOURPASSWORD
 ```
 
 ## PUID/PGID
