@@ -41,6 +41,6 @@ fi
 
 set -e
 
-su -m qbittorrent -s /bin/bash -c "$DAEMONSTRING"
+su -m "$(getent passwd $PUID | cut -d: -f1)" -s /bin/bash -c "$DAEMONSTRING"
 sleep 1
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Started qBittorrent successfully..."
