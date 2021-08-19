@@ -72,12 +72,22 @@ $ docker run --privileged -d \
 ```
 
 ## Docker Tags
+
+#### **Current**
+
 | Tag | Description |
 |----------|----------|
-| `trigus42/qbittorrentvpn` | The latest image tested on amd64 and armv7 |
-| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent (e.g. for reproducable compose deployments) |
-| `trigus42/qbittorrentvpn:qbtx.x.x` | Image build with version x.x.x of qBittorrent |
+| `trigus42/qbittorrentvpn` | The latest image with the then latest version of qBittorrent |
+| `trigus42/qbittorrentvpn:YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent |
+| `trigus42/qbittorrentvpn:qbtx.x.x` | Image with version x.x.x of qBittorrent |
+| `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image build on YYYYMMDD with version x.x.x of qBittorrent |
 | `trigus42/qbittorrentvpn:testing` | Unstable, untested image (not recommended) |
+
+#### **Old**
+
+| Tag | Description |
+|----------|----------|
+| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Same as `trigus42/qbittorrentvpn:YYYYMMDD` |
 
 ## Variables, Volumes, and Ports
 ### Environment Variables
