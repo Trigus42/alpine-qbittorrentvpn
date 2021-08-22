@@ -260,6 +260,7 @@ done
 if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
+		echo "--------------------"
 
 		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
 		mkdir -p /dev/net
@@ -273,14 +274,17 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		else
 			exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
 		fi
+		echo "--------------------"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
+		echo "--------------------"
 		cd /config/wireguard
 		if iplink | grep $(basename "$VPN_CONFIG" .conf); then
 			wg-quick down "$VPN_CONFIG" || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
 			sleep 0.5 # Just to give WireGuard a bit to go down
 		fi
 		wg-quick up "$VPN_CONFIG"
+		echo "--------------------"
 	fi
 	exec /bin/bash /init/iptables.sh
 else
