@@ -216,10 +216,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ -n "${LAN_NETWORK}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LAN_NETWORK defined as '${LAN_NETWORK}'"
 	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] LAN_NETWORK not defined (via -e LAN_NETWORK), exiting..."
-		# Sleep so it wont 'spam restart'
-		sleep 10
-		exit 1
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LAN_NETWORK not defined (via -e LAN_NETWORK)"
 	fi
 
 	export NAME_SERVERS=$(echo "${NAME_SERVERS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
@@ -250,7 +247,7 @@ IFS=',' read -ra name_server_list <<< "${NAME_SERVERS}"
 
 # Process name servers in the list
 for name_server_item in "${name_server_list[@]}"; do
-	# strip whitespace from start and end of lan_network_item
+	# strip whitespace from start and end of name_server_item
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${name_server_item} to resolv.conf"
