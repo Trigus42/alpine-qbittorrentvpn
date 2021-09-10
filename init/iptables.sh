@@ -75,9 +75,8 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	if [[ $SET_FWMARK == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding fwmark for webui."
 
-		# setup route for qBittorrent webui using set-mark to route traffic for port 8080 and 8999 to "${docker_interface}"
+		# setup route for qBittorrent webui using set-mark to route traffic for port 8080 to "${docker_interface}"
 		echo "8080    webui" >> /etc/iproute2/rt_tables
-		echo "8999    webui" >> /etc/iproute2/rt_tables
 		ip rule add fwmark 1 table webui
 		ip route add default via "${DEFAULT_GATEWAY}" table webui
 
@@ -112,17 +111,16 @@ iptables -P INPUT DROP
 ip6tables -P INPUT DROP 1>&- 2>&-
 
 # accept input to tunnel adapter
-iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -j ACCEPT
+iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -m comment --comment "Accept input from tunnel adapter" -j ACCEPT
 
-# accept input to/from LANs (172.x range is internal dhcp)
-iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
+# accept input from/to internal docker network
+iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept input from internal Docker network" -j ACCEPT
 
 # accept input to vpn gateway
-iptables -A INPUT -i "${docker_interface}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -j ACCEPT
+iptables -A INPUT -i "${docker_interface}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -m comment --comment "Accept input of VPN gateway" -j ACCEPT
 
 # accept input to qBittorrent webui port
-iptables -A INPUT -i "${docker_interface}" -p tcp --dport 8080 -j ACCEPT
-iptables -A INPUT -i "${docker_interface}" -p tcp --sport 8080 -j ACCEPT
+iptables -A INPUT -i "${docker_interface}" -p tcp --dport 8080 -m comment --comment "Accept input to qBittorrent webui port" -j ACCEPT
 
 # additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
@@ -138,16 +136,15 @@ if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional incoming port ${additional_port_item} for ${docker_interface}"
 
 		# accept input to additional port for "${docker_interface}"
-		iptables -A INPUT -i "${docker_interface}" -p tcp --dport "${additional_port_item}" -j ACCEPT
-		iptables -A INPUT -i "${docker_interface}" -p tcp --sport "${additional_port_item}" -j ACCEPT
+		iptables -A INPUT -i "${docker_interface}" -p tcp --dport "${additional_port_item}" -m comment --comment "Accept input to additional port" -j ACCEPT
 	done
 fi
 
 # accept input icmp (ping)
-iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-reply -m comment --comment "Accept ICMP (ping)" -j ACCEPT
 
 # accept input to local loopback
-iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -i lo -m comment --comment "Accept input to internal loopback" -j ACCEPT
 
 # output iptable rules
 ###
@@ -158,18 +155,16 @@ iptables -P OUTPUT DROP
 # set policy to drop ipv6 for output
 ip6tables -P OUTPUT DROP 1>&- 2>&-
 
-# accept output from tunnel adapter
-iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -j ACCEPT
+iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -m comment --comment "Accept output to tunnel adapter" -j ACCEPT
 
-# accept output to/from LANs
-iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
+# accept output to/from internal docker network
+iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept output to internal Docker network" -j ACCEPT
 
 # accept output from vpn gateway
-iptables -A OUTPUT -o "${docker_interface}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -j ACCEPT
+iptables -A OUTPUT -o "${docker_interface}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -m comment --comment "Accept output of VPN gateway" -j ACCEPT
 
 # accept output from qBittorrent webui port - used for lan access
-iptables -A OUTPUT -o "${docker_interface}" -p tcp --dport 8080 -j ACCEPT
-iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 8080 -j ACCEPT
+iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 8080 -m comment --comment "Accept output from qBittorrent webui port" -j ACCEPT
 
 # additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
@@ -185,17 +180,16 @@ if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional outgoing port ${additional_port_item} for ${docker_interface}"
 
 		# accept output to additional port for lan interface
-		iptables -A OUTPUT -o "${docker_interface}" -p tcp --dport "${additional_port_item}" -j ACCEPT
-		iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport "${additional_port_item}" -j ACCEPT
+		iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport "${additional_port_item}" -m comment --comment "Accept output from additional port" -j ACCEPT
 
 	done
 fi
 
 # accept output for icmp (ping)
-iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A OUTPUT -p icmp --icmp-type echo-request -m comment --comment "Accept ICMP (ping)" -j ACCEPT
 
 # accept output from local loopback adapter
-iptables -A OUTPUT -o lo -j ACCEPT
+iptables -A OUTPUT -o lo -m comment --comment "Accept output from internal loopback" -j ACCEPT
 
 if [[ "${DEBUG}" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] iptables table 'filter' defined as follows..."
