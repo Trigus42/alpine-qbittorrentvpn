@@ -11,7 +11,6 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 * Selectively enable or disable WireGuard or OpenVPN support
 * IP tables killswitch to prevent IP leaking when VPN connection fails
 * Configurable UID and GID for config files and /downloads for qBittorrent
-* BitTorrent port 8999 exposed by default
 
 ## Software
 * Base: alpine
