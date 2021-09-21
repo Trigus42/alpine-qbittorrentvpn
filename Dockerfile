@@ -1,11 +1,9 @@
 FROM alpine:3.14
 
-ARG BUILD_DATE
 # You can find the available package versions at https://pkgs.alpinelinux.org/packages?name=qbittorrent-nox
 ARG QBITTORRENT_VERSION="4.3.8-r0"
-
-LABEL build_version="qBittorrent version: ${QBITTORRENT_VERSION} - Build-date: ${BUILD_DATE}"
-LABEL maintainer="trigus42"
+# You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
+ARG S6_OVERLAY_VERSION="v2.2.0.3"
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
@@ -13,8 +11,8 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 RUN \
     # Install tools
     apk add --no-cache \
-        s6-overlay \
         bash \
+        wget \
         wireguard-tools \
         dos2unix \
         openvpn \
@@ -34,6 +32,12 @@ RUN \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
         qbittorrent-nox=${QBITTORRENT_VERSION}
+
+# Install s6-overlay
+ADD ./build/s6-overlay-arch /tmp/s6-overlay-arch
+RUN \
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
+    tar xzf /tmp/s6_overlay.tar.gz -C /
 
 COPY rootfs /
 

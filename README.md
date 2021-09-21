@@ -26,7 +26,12 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 ```sh
 $ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
 $ cd qbittorrentvpn
-$ docker build -t qbittorrentvpn .
+
+# x86_64
+$ docker build -f Dockerfile -t qbittorrentvpn .
+# ARM
+$ docker build -f Dockerfile.compile -t qbittorrentvpn .
+
 $ docker run --privileged -d \
              -v /your/config/path/:/config \
              -v /your/downloads/path/:/downloads \
