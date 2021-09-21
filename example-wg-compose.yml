@@ -12,15 +12,12 @@ services:
       - VPN_ENABLED=yes
       - VPN_TYPE=wireguard
       - LAN_NETWORK=192.168.0.0/24
-      - HEALTH_CHECK_HOST=one.one.one.one
-      - HEALTH_CHECK_INTERVAL=300
       - ENABLE_SSL=yes
-      - UNPRIVILEGED=yes
     volumes:
-      - '/server/qbittorrent/:/config'
+      - './config/:/config'
     ports:
-     # - 80:8080
-      - 443:8080
+     - 80:8080
+     - 443:8080
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

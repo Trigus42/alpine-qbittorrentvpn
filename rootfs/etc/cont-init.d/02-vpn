@@ -1,0 +1,219 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+##########
+# Skip if VPN is disabled
+
+if [[ $VPN_ENABLED == "no" ]]; then
+    exit 0
+fi
+
+##########
+# Check for config file
+
+# Create config dir (if it doesn't exist)
+mkdir -p "/config/${VPN_TYPE}"
+
+# If VPN config file not found in /config/openvpn or /config/wireguard then exit
+if [[ -z ${VPN_CONFIG} ]]; then
+    if [[ ${VPN_TYPE} == "openvpn" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No OpenVPN config file found in /config/openvpn/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.ovpn'"
+    else
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No WireGuard config file found in /config/wireguard/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.conf'"
+    fi
+    # Sleep so it wont 'spam restart'
+    sleep 5
+    exit 1
+fi
+
+if [[ ${VPN_TYPE} == "openvpn" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] OpenVPN config file is found at ${VPN_CONFIG}"
+else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WireGuard config file is found at ${VPN_CONFIG}"
+    if [[ ${VPN_CONFIG} != "/config/wireguard/wg0.conf" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] WireGuard config filename is not 'wg0.conf'"
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Rename ${VPN_CONFIG} to 'wg0.conf'"
+        sleep 5
+        exit 1
+    fi
+fi
+
+##########
+# OpenVPN credentails
+
+# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    # Replace line with one that points to credentials.conf
+        auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
+        if [[ -n "${auth_cred_exist}" ]]; then
+            # Get line number of auth-user-pass
+            LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
+            sed -i "${LINE_NUM}s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
+        else
+            sed -i "1s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
+        fi
+
+    if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
+        echo "${VPN_USERNAME}" > /config/openvpn/credentials.conf
+        echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
+    fi
+fi
+
+##########
+# Read VPN config
+
+# Convert CRLF (windows) to LF (unix)
+dos2unix "${VPN_CONFIG}" 1> /dev/null
+
+# Parse values from the ovpn or conf file
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+else
+    export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
+fi
+
+if [[ -n "${vpn_remote_line}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
+else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line, showing contents of file before exit..."
+    cat "${VPN_CONFIG}"
+    # Sleep so it wont 'spam restart'
+    sleep 5
+    exit 1
+fi
+
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '^[^\s\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+else
+    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '^[^:\r\n]+')
+fi
+
+if [[ -n "${VPN_REMOTE}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_REMOTE defined as '${VPN_REMOTE}'"
+else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_REMOTE not found in ${VPN_CONFIG}, exiting..."
+    # Sleep so it wont 'spam restart'
+    sleep 5
+    exit 1
+fi
+
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=\s)\d{2,5}(?=\s)?+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+else
+    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=:)\d{2,5}(?=:)?+')
+fi
+
+if [[ -n "${VPN_PORT}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PORT defined as '${VPN_PORT}'"
+else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_PORT not found in ${VPN_CONFIG}, exiting..."
+    # Sleep so it wont 'spam restart'
+    sleep 5
+    exit 1
+fi
+
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    export VPN_PROTOCOL=$( (grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+    if [[ -n "${VPN_PROTOCOL}" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
+    else
+        export VPN_PROTOCOL=$(echo "${vpn_remote_line}" | grep -P -o -m 1 'udp|tcp-client|tcp$' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+        if [[ -n "${VPN_PROTOCOL}" ]]; then
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
+        else
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_PROTOCOL not found in ${VPN_CONFIG}, assuming udp"
+            export VPN_PROTOCOL="udp"
+        fi
+    fi
+    # Required for use in iptables
+    if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
+        export VPN_PROTOCOL="tcp"
+    fi
+else
+    export VPN_PROTOCOL="udp"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}', since WireGuard is always ${VPN_PROTOCOL}."
+fi
+
+
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    VPN_DEVICE_TYPE=$( (grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+    if [[ -n "${VPN_DEVICE_TYPE}" ]]; then
+        export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
+    else
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}, exiting..."
+        # Sleep so it wont 'spam restart'
+        sleep 5
+        exit 1
+    fi
+else
+    export VPN_DEVICE_TYPE="wg0"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE set as '${VPN_DEVICE_TYPE}', since WireGuard will always be wg0."
+fi
+
+##########
+# Unprivileged mode
+
+if [[ "${VPN_TYPE}" == "wireguard" ]]; then
+    # Check if net.ipv4.conf.all.src_valid_mark can be set (container running in privileged mode)
+    if ! (sysctl -q net.ipv4.conf.all.src_valid_mark=1 >/dev/null 2>&1); then
+        # Check if net.ipv4.conf.all.src_valid_mark is already set to 1
+        if [ "$(sysctl net.ipv4.conf.all.src_valid_mark)" == "net.ipv4.conf.all.src_valid_mark = 1" ]; then
+            # Update sed
+            apk add --no-cache --quiet sed
+            # Modify wg-quick to run in unprivileged container
+            sed -i -E 's/&& cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' "$(command -v wg-quick)"
+        else
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Trying to run in unprivileged mode but $(sysctl net.ipv4.conf.all.src_valid_mark)"
+            sleep 5
+            exit 1
+        fi
+    fi
+fi
+
+# Exit if any of the following commands fails
+set -e
+
+if [[ $VPN_ENABLED == "yes" ]]; then
+	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
+		echo "--------------------"
+
+		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
+		mkdir -p /dev/net
+		if [ ! -c /dev/net/tun ]; then
+			mknod /dev/net/tun c 10 200
+		fi
+
+		cd /config/openvpn
+		if [[ "${VPN_OPTIONS}" != "" ]]; then
+			exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 "${VPN_OPTIONS}" --config "${VPN_CONFIG}" &
+		else
+			exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
+		fi
+		echo "--------------------"
+	else
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
+		echo "--------------------"
+		cd /config/wireguard
+		if iplink | grep "$(basename "$VPN_CONFIG" .conf)"; then
+			wg-quick down "$VPN_CONFIG" || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
+			sleep 0.5 # Just to give WireGuard a bit to go down
+		fi
+		wg-quick up "$VPN_CONFIG"
+		echo "--------------------"
+	fi
+fi
+
+set +e
+
+##########
+# Save envirnonment variables
+
+CONT_INIT_ENV="/var/run/s6/container_environment"
+mkdir -p $CONT_INIT_ENV
+export_vars=("VPN_REMOTE" "VPN_PORT" "VPN_PROTOCOL" "VPN_DEVICE_TYPE")
+
+for name in "${export_vars[@]}"; do
+	echo -n "${!name}" > "$CONT_INIT_ENV/$name"
+done

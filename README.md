@@ -18,9 +18,10 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 * [libtorrent](https://github.com/arvidn/libtorrent) compiled from source
 * WireGuard / OpenVPN
 
-## Run container
+# Run container:
+
 &NewLine;
-### Build it yourself
+## Build it yourself
 &NewLine;
 ```sh
 $ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
@@ -37,7 +38,7 @@ $ docker run --privileged -d \
              qbittorrentvpn
 ```
 
-### From the Docker registry
+## From the Docker registry
 &NewLine;
 ```sh
 $ docker run --privileged -d \
@@ -51,14 +52,13 @@ $ docker run --privileged -d \
              trigus42/qbittorrentvpn
 ```
 
-### Run in unprivileged mode
+## Run in unprivileged mode
 (Omit the `--privileged` flag - mainly for security)
 
 &NewLine;
 #### Wireguard:
 &NewLine;
 ```sh
--e "UNPRIVILEGED=yes" \
 --cap-add=NET_ADMIN \
 --cap-add=SYS_MODULE \
 --sysctl net.ipv4.conf.all.src_valid_mark=1 \
@@ -70,9 +70,7 @@ $ docker run --privileged -d \
 --cap-add=NET_ADMIN \
 ```
 
-## Docker Tags
-
-#### **Current**
+# Docker Tags
 
 | Tag | Description |
 |----------|----------|
@@ -80,57 +78,51 @@ $ docker run --privileged -d \
 | `trigus42/qbittorrentvpn:YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent |
 | `trigus42/qbittorrentvpn:qbtx.x.x` | Image with version x.x.x of qBittorrent |
 | `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image build on YYYYMMDD with version x.x.x of qBittorrent |
-| `trigus42/qbittorrentvpn:testing` | Unstable, untested image (not recommended) |
+| `trigus42/qbittorrentvpn:testing` | Image used for testing (don't use)|
 
-#### **Old**
+The images of the development branch use the same naming sceme except that `dev-` is added in front.  
+For example: `trigus42/qbittorrentvpn:dev-qbtx.x.x-YYYYMMDD`  
+Testing and feedback is appreciated.
 
-| Tag | Description |
-|----------|----------|
-| `trigus42/qbittorrentvpn:alpine-YYYYMMDD` | Same as `trigus42/qbittorrentvpn:YYYYMMDD` |
-
-## Variables, Volumes, and Ports
-### Environment Variables
+# Environment Variables
 | Variable | Required | Function | Example | Default |
 |----------|----------|----------|----------|----------|
 |`VPN_ENABLED`| Yes | Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
 |`VPN_TYPE`| Yes | WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=openvpn`|`wireguard`|
-|`UNPRIVILEGED`| No | Allows container to run in unprivileged mode when wireguard is used |`UNPRIVILEGED=yes`|`no`|
 |`VPN_USERNAME`| No | If username and password provided, configures ovpn file automatically |`VPN_USERNAME=ad8f64c02a2de`||
 |`VPN_PASSWORD`| No | If username and password provided, configures ovpn file automatically |`VPN_PASSWORD=ac98df79ed7fb`||
 |`LAN_NETWORK`| No | Comma delimited local Network's with CIDR notation |`LAN_NETWORK=192.168.0.0/24,10.10.0.0/24`||
 |`SET_FWMARK`| No | Make web interface reachable for devices in networks not specified in `LAN_NETWORK` |`yes`|`no`|
 |`ENABLE_SSL`| No | Let the container handle SSL (yes/no) |`ENABLE_SSL=yes`|`no`|
 |`NAME_SERVERS`| No | Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
-|`PUID`| No | UID applied to /config files and /downloads |`PUID=99`|`99`|
-|`PGID`| No | GID applied to /config files and /downloads  |`PGID=100`|`100`|
+|`PUID`| No | UID applied to /config files and /downloads |`PUID=99`|`1000`|
+|`PGID`| No | GID applied to /config files and /downloads  |`PGID=100`|`1000`|
 |`UMASK`| No | |`UMASK=002`|`002`|
-|`HEALTH_CHECK_HOST`| No | This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=one.one.one.one`|`one.one.one.one`|
-|`HEALTH_CHECK_INTERVAL`| No | This is the time in seconds that the container waits to see if the internet connection still works (check if VPN died) |`HEALTH_CHECK_INTERVAL=300`|`300`|
-|`HEALTH_CHECK_SILENT`| No | Set to `1` to supress the 'Network is up' message. Defaults to `1` if unset |`HEALTH_CHECK_SILENT=1`|`1`|
+|`HEALTH_CHECK_HOST`| No | This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=8.8.8.8`|`1.1.1.1`|
+|`HEALTH_CHECK_INTERVAL`| No | This is the time in seconds that the container waits to see if the VPN still works |`HEALTH_CHECK_INTERVAL=5`|`5`|
 |`INSTALL_PYTHON3`| No | Set this to `yes` to let the container install Python3 |`INSTALL_PYTHON3=yes`|`no`|
 |`ADDITIONAL_PORTS`| No | Adding a comma delimited list of ports will allow these ports via the iptables script |`ADDITIONAL_PORTS=1234,8112`||
 |`DEBUG`| No | Print information useful for debugging in log |`yes`|`no`|
 
-### Volumes
+# Volumes
 | Volume | Required | Function | Example |
 |----------|----------|----------|----------|
 | `config` | Yes | qBittorrent, WireGuard and OpenVPN config files | `/your/config/path/:/config`|
 | `downloads` | No | Default downloads path for saving downloads | `/your/downloads/path/:/downloads`|
 
-### Ports
+# Ports
 | Port | Proto | Required | Function | Example |
 |----------|----------|----------|----------|----------|
 | `8080` | TCP | Yes | qBittorrent WebUI | `8080:8080`|
 
-## Access the WebUI
-Access https://IPADDRESS:PORT from a browser on the same network. (for example: https://192.168.0.90:8080)
-
-### Default Credentials
+# Default Credentials
 
 | Credential | Default Value |
 |----------|----------|
 |`username`| `admin` |
 |`password`| `adminadmin` |
+
+# VPN Configuration
 
 ## How to use WireGuard 
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid .conf file present in the /config/wireguard directory. Drop a .conf file from your VPN provider into /config/wireguard and start the container again. The file must have the name `wg0.conf`, or it will fail to start.
@@ -153,10 +145,10 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 id <username>
 ```
 
-## Issues
+# Issues
 If you are having issues with this container please submit an issue on GitHub.  
 Please provide logs, Docker version and other information that can simplify reproducing the issue.  
 If possible, always use the most up to date version of Docker, you operating system, kernel and the container itself. Support is always a best-effort basis.
 
-## Credits:
+# Credits:
 This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off on [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).

@@ -14,13 +14,11 @@ services:
       - VPN_USERNAME=YOURUSERNAME
       - VPN_PASSWORD=YOURPASSWORD
       - LAN_NETWORK=192.168.0.0/24
-      - HEALTH_CHECK_HOST=one.one.one.one
-      - HEALTH_CHECK_INTERVAL=300
       - ENABLE_SSL=yes
     volumes:
       - '/server/qbittorrent/:/config'
     ports:
-     # - 80:8080
+      - 80:8080
       - 443:8080
     restart: unless-stopped
     cap_add:
