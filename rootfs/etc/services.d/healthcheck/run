@@ -1,0 +1,43 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+# Wait until qbittorrent-nox is up
+while ! (pgrep -o qbittorrent-nox >/dev/null 2>&1); do
+    sleep 0.1
+done
+qbittorrentpid=$(pgrep -o qbittorrent-nox)
+echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] qBittorrent started with PID $qbittorrentpid"
+
+# Set some variables that are used
+HOST=${HEALTH_CHECK_HOST}
+DEFAULT_HOST="one.one.one.one"
+INTERVAL=${HEALTH_CHECK_INTERVAL}
+DEFAULT_INTERVAL=5
+
+# If host is zero (not set) default it to the DEFAULT_HOST variable
+if [[ -z "${HOST}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_HOST is not set. Using default host ${DEFAULT_HOST}"
+    HOST=${DEFAULT_HOST}
+fi
+
+# If HEALTH_CHECK_INTERVAL is zero (not set) default it to DEFAULT_INTERVAL
+if [[ -z "${HEALTH_CHECK_INTERVAL}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_INTERVAL is not set. Using default interval of ${DEFAULT_INTERVAL}s"
+    INTERVAL=${DEFAULT_INTERVAL}
+fi
+
+while :; do
+    # Check if it is possible to bypass the VPN
+    if (ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
+        exit 1
+	fi
+
+    # Check if HEALTH_CHECK_HOST is reachable
+    if ! (ping -c 1 $HOST > /dev/null 2>&1); then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
+        exit 1
+    fi
+
+    sleep ${INTERVAL}
+done
