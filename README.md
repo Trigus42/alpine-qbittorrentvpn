@@ -13,35 +13,12 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 * Configurable UID and GID for config files and /downloads for qBittorrent
 
 ## Software
-* Base: alpine
-* [qBittorrent](https://github.com/qbittorrent/qBittorrent) compiled from source
-* [libtorrent](https://github.com/arvidn/libtorrent) compiled from source
-* WireGuard / OpenVPN
+* [alpine](https://hub.docker.com/_/alpine) (base image)
+* [qBittorrent](https://github.com/qbittorrent/qBittorrent)
+* [libtorrent](https://github.com/arvidn/libtorrent)
+* [WireGuard](https://www.wireguard.com/) / [OpenVPN](https://github.com/OpenVPN/openvpn)
 
 # Run container:
-
-&NewLine;
-## Build it yourself
-&NewLine;
-```sh
-$ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
-$ cd qbittorrentvpn
-
-# x86_64
-$ docker build -f Dockerfile -t qbittorrentvpn .
-# ARM
-$ docker build -f Dockerfile.compile -t qbittorrentvpn .
-
-$ docker run --privileged -d \
-             -v /your/config/path/:/config \
-             -v /your/downloads/path/:/downloads \
-             -e "VPN_ENABLED=yes" \
-             -e "VPN_TYPE=wireguard" \
-             -e "LAN_NETWORK=192.168.0.0/24" \
-             -p 8080:8080 \
-             --restart unless-stopped \
-             qbittorrentvpn
-```
 
 ## From the Docker registry
 &NewLine;
@@ -73,6 +50,33 @@ $ docker run --privileged -d \
 &NewLine;
 ```sh
 --cap-add=NET_ADMIN \
+```
+
+&NewLine;
+## Build it yourself
+&NewLine;
+You can use the `Dockerfile` with all architectures and versions of qBT that are listed [here](https://pkgs.alpinelinux.org/package/edge/testing/x86_64/qbittorrent-nox).  
+You can find more information on the `Architecture` tags [here](https://wiki.alpinelinux.org/wiki/Architecture).  
+
+The `Dockerfile.compile` should work for all architectures.
+
+&NewLine;
+```sh
+$ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
+$ cd alpine-qbittorrentvpn
+
+$ docker build -f Dockerfile -t qbittorrentvpn .
+$ docker build -f Dockerfile.compile -t qbittorrentvpn .
+
+$ docker run --privileged -d \
+             -v /your/config/path/:/config \
+             -v /your/downloads/path/:/downloads \
+             -e "VPN_ENABLED=yes" \
+             -e "VPN_TYPE=wireguard" \
+             -e "LAN_NETWORK=192.168.0.0/24" \
+             -p 8080:8080 \
+             --restart unless-stopped \
+             qbittorrentvpn
 ```
 
 # Docker Tags
