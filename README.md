@@ -155,9 +155,9 @@ id <username>
 ```
 
 # Issues
-If you are having issues with this container please submit an issue on GitHub.  
-Please provide logs, Docker version and other information that can simplify reproducing the issue.  
-If possible, always use the most up to date version of Docker, you operating system, kernel and the container itself. Support is always a best-effort basis.
+If you encounter any issues please checkout the [Known-Issues](https://github.com/Trigus42/alpine-qbittorrentvpn/wiki/Known-Issues) page in the wiki before you open a new issue. 
+If you open an issue, please provide logs and other information that can simplify reproducing the issue.  
+If possible, always use the most up to date (stable) version of Docker, your operating system, kernel and the container itself.
 
 # Credits:
 This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off on [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
