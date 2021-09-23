@@ -25,7 +25,6 @@ RUN \
         openssl \
         qt5-qtbase \
         libexecinfo; \
-
     # Install qbittorrent-nox
     apk add --no-cache \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
@@ -34,7 +33,7 @@ RUN \
         qbittorrent-nox=${QBITTORRENT_VERSION}
 
 # Install s6-overlay
-ADD ./build/s6-overlay-arch /tmp/s6-overlay-arch
+COPY ./build/s6-overlay-arch /tmp/s6-overlay-arch
 RUN \
     wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
     tar xzf /tmp/s6_overlay.tar.gz -C /
