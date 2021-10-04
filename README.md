@@ -84,7 +84,6 @@ $ docker run --privileged -d \
 | Tag | Description |
 |----------|----------|
 | `trigus42/qbittorrentvpn` | The latest image with the then latest version of qBittorrent |
-| `trigus42/qbittorrentvpn:YYYYMMDD` | Image build on YYYYMMDD with the then latest version of qBittorrent |
 | `trigus42/qbittorrentvpn:qbtx.x.x` | Image with version x.x.x of qBittorrent |
 | `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image build on YYYYMMDD with version x.x.x of qBittorrent |
 | `trigus42/qbittorrentvpn:testing` | Image used for testing (don't use)|
