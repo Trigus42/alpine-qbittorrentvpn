@@ -55,7 +55,7 @@ $ docker run --privileged -d \
 &NewLine;
 ## Build it yourself
 &NewLine;
-You can use the `Dockerfile` with all architectures and versions of qBT that are listed [here](https://pkgs.alpinelinux.org/package/edge/testing/x86_64/qbittorrent-nox).  
+You can use the `Dockerfile` with all architectures and versions of qBT that are listed [here](https://pkgs.alpinelinux.org/packages?name=qbittorrent-nox).  
 You can find more information on the `Architecture` tags [here](https://wiki.alpinelinux.org/wiki/Architecture).  
 
 The `Dockerfile.compile` should work for all architectures.
