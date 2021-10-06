@@ -30,7 +30,8 @@ RUN \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-        qbittorrent-nox=${QBITTORRENT_VERSION}
+        qbittorrent-nox=${QBITTORRENT_VERSION}; \
+    exit 0
 
 # Install s6-overlay
 COPY ./build/s6-overlay-arch /tmp/s6-overlay-arch
