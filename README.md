@@ -131,7 +131,7 @@ Testing and feedback is appreciated.
 |`password`| `adminadmin` |
 
 # VPN Configuration
-If there a multiple config files present, one will be choosen randomly.
+If there are multiple config files present, one will be choosen randomly.
 
 ## How to use WireGuard 
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid `INTERFACE.conf` file present in the `/config/wireguard` directory. Drop a `.conf` file from your VPN provider into `/config/wireguard` and start the container again.
