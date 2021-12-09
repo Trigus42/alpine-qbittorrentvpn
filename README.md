@@ -97,8 +97,8 @@ Testing and feedback is appreciated.
 |----------|----------|----------|----------|----------|
 |`VPN_ENABLED`| Yes | Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
 |`VPN_TYPE`| Yes | WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=openvpn`|`wireguard`|
-|`VPN_USERNAME`| No | If username and password provided, configures ovpn file automatically |`VPN_USERNAME=ad8f64c02a2de`||
-|`VPN_PASSWORD`| No | If username and password provided, configures ovpn file automatically |`VPN_PASSWORD=ac98df79ed7fb`||
+|`VPN_USERNAME`| No | If username and password provided, configures all ovpn files automatically |`VPN_USERNAME=ad8f64c02a2de`||
+|`VPN_PASSWORD`| No | If username and password provided, configures all ovpn files automatically |`VPN_PASSWORD=ac98df79ed7fb`||
 |`LAN_NETWORK`| No | Comma delimited local Network's with CIDR notation |`LAN_NETWORK=192.168.0.0/24,10.10.0.0/24`||
 |`SET_FWMARK`| No | Make web interface reachable for devices in networks not specified in `LAN_NETWORK` |`yes`|`no`|
 |`ENABLE_SSL`| No | Let the container handle SSL (yes/no) |`ENABLE_SSL=yes`|`no`|
@@ -131,16 +131,18 @@ Testing and feedback is appreciated.
 |`password`| `adminadmin` |
 
 # VPN Configuration
+If there a multiple config files present, one will be choosen randomly.
 
 ## How to use WireGuard 
-The container will fail to boot if `VPN_ENABLED` is set and there is no valid .conf file present in the /config/wireguard directory. Drop a .conf file from your VPN provider into /config/wireguard and start the container again. The file must have the name `wg0.conf`, or it will fail to start.
+The container will fail to boot if `VPN_ENABLED` is set and there is no valid `INTERFACE.conf` file present in the `/config/wireguard` directory. Drop a `.conf` file from your VPN provider into `/config/wireguard` and start the container again.
+
+> Recommended INTERFACE names include `wg0` or `wgvpn0` or even `wgmgmtlan0`. However, the number at the end is in fact optional, and really any free-form string `[a-zA-Z0-9_=+.-]{1,15}` will work. So even interface names corresponding to geographic locations would suffice, such as `cincinnati`, `nyc`, or `paris`, if that's somehow desirable.  
 
 ## How to use OpenVPN
-The container will fail to boot if `VPN_ENABLED` is set and there is no valid .ovpn file present in the /config/openvpn directory. Drop a .ovpn file from your VPN provider into /config/openvpn (if necessary with additional files like certificates) and start the container again. You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD` or manually store your VPN credentials in `openvpn/credentials.conf`.
+The container will fail to boot if `VPN_ENABLED` is set and there is no valid `FILENAME.ovpn` file present in the `/config/openvpn` directory. Drop a `.ovpn` file from your VPN provider into `/config/openvpn` (if necessary with additional files like certificates) and start the container again.  
+You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD`, which will be used for all VPN config files if set or manually store your VPN credentials in `openvpn/FILENAME_credentials.conf`.
 
-**Note:** The script will use the first ovpn file it finds in the /config/openvpn directory. Adding multiple ovpn files will not start multiple VPN connections.
-
-### Example credentials.conf
+### Example credentials file
 ```
 YOURUSERNAME
 YOURPASSWORD

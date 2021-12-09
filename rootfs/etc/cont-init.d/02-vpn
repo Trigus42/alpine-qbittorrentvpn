@@ -14,6 +14,24 @@ fi
 # Create config dir (if it doesn't exist)
 mkdir -p "/config/${VPN_TYPE}"
 
+# Wildcard search for openvpn config files and store results in array
+if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    mapfile -t VPN_CONFIGS < <( find /config/openvpn -maxdepth 1 -name "*.ovpn" -print )
+else
+    mapfile -t VPN_CONFIGS < <( find /config/wireguard -maxdepth 1 -name "*.conf" -print )
+fi
+
+# Choose random config
+VPN_CONFIG="${VPN_CONFIGS[$RANDOM % ${#VPN_CONFIGS[@]}]}"
+
+# Get the VPN_CONFIG name without the path and extension
+VPN_CONFIG_BASENAME="${VPN_CONFIG##*/}"
+VPN_CONFIG_NAME="${VPN_CONFIG_BASENAME%.*}"
+
+echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Choosen VPN config: '${VPN_CONFIG_BASENAME}'"
+
+export VPN_CONFIG, VPN_CONFIG_NAME
+
 # If VPN config file not found in /config/openvpn or /config/wireguard then exit
 if [[ -z ${VPN_CONFIG} ]]; then
     if [[ ${VPN_TYPE} == "openvpn" ]]; then
@@ -26,18 +44,6 @@ if [[ -z ${VPN_CONFIG} ]]; then
     exit 1
 fi
 
-if [[ ${VPN_TYPE} == "openvpn" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] OpenVPN config file is found at ${VPN_CONFIG}"
-else
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WireGuard config file is found at ${VPN_CONFIG}"
-    if [[ ${VPN_CONFIG} != "/config/wireguard/wg0.conf" ]]; then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] WireGuard config filename is not 'wg0.conf'"
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Rename ${VPN_CONFIG} to 'wg0.conf'"
-        sleep 5
-        exit 1
-    fi
-fi
-
 ##########
 # OpenVPN credentails
 
@@ -48,14 +54,14 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
         if [[ -n "${auth_cred_exist}" ]]; then
             # Get line number of auth-user-pass
             LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
-            sed -i "${LINE_NUM}s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
+            sed -i "${LINE_NUM}s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
         else
-            sed -i "1s/.*/auth-user-pass credentials.conf/" "${VPN_CONFIG}"
+            sed -i "1s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
         fi
 
     if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
-        echo "${VPN_USERNAME}" > /config/openvpn/credentials.conf
-        echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
+        echo "${VPN_USERNAME}" > /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
+        echo "${VPN_PASSWORD}" >> /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
     fi
 fi
 
@@ -147,8 +153,8 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
         exit 1
     fi
 else
-    export VPN_DEVICE_TYPE="wg0"
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE set as '${VPN_DEVICE_TYPE}', since WireGuard will always be wg0."
+    export VPN_DEVICE_TYPE="$VPN_CONFIG_NAME"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE set as '${VPN_DEVICE_TYPE}'"
 fi
 
 ##########
@@ -212,7 +218,7 @@ set +e
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("VPN_REMOTE" "VPN_PORT" "VPN_PROTOCOL" "VPN_DEVICE_TYPE")
+export_vars=("VPN_REMOTE" "VPN_PORT" "VPN_PROTOCOL" "VPN_DEVICE_TYPE" "VPN_CONFIG_NAME")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"
