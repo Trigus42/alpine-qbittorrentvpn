@@ -30,7 +30,8 @@ VPN_CONFIG_NAME="${VPN_CONFIG_BASENAME%.*}"
 
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Choosen VPN config: '${VPN_CONFIG_BASENAME}'"
 
-export VPN_CONFIG, VPN_CONFIG_NAME
+export VPN_CONFIG
+export VPN_CONFIG_NAME
 
 # If VPN config file not found in /config/openvpn or /config/wireguard then exit
 if [[ -z ${VPN_CONFIG} ]]; then
