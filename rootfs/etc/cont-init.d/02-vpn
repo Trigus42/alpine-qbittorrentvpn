@@ -51,18 +51,29 @@ fi
 # Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
     # Replace line with one that points to credentials.conf
-        auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
-        if [[ -n "${auth_cred_exist}" ]]; then
-            # Get line number of auth-user-pass
-            LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
-            sed -i "${LINE_NUM}s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
-        else
-            sed -i "1s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
-        fi
+    auth_cred_exist=$(grep -m 1 'auth-user-pass' < "${VPN_CONFIG}")
+    if [[ -n "${auth_cred_exist}" ]]; then
+        # Get line number of auth-user-pass
+        LINE_NUM=$(grep -Fn -m 1 'auth-user-pass' "${VPN_CONFIG}" | cut -d: -f 1)
+        sed -i "${LINE_NUM}s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
+    else
+        sed -i "1s/.*/auth-user-pass ${VPN_CONFIG_NAME}_credentials.conf/" "${VPN_CONFIG}"
+    fi
 
-    if [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
+    if [[ -f /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Using credentials from /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
+    elif [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Using credentials from env vars"
         echo "${VPN_USERNAME}" > /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
         echo "${VPN_PASSWORD}" >> /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
+    elif [[ -f /config/openvpn/credentials.conf ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Copying credentials from /config/openvpn/credentials.conf to /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
+        cp /config/openvpn/credentials.conf /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
+    else
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No credentials set and didn't find a credential config file."
+        # Sleep so it wont 'spam restart'
+        sleep 5
+        exit 1
     fi
 fi
 

@@ -140,7 +140,8 @@ The container will fail to boot if `VPN_ENABLED` is set and there is no valid `I
 
 ## How to use OpenVPN
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid `FILENAME.ovpn` file present in the `/config/openvpn` directory. Drop a `.ovpn` file from your VPN provider into `/config/openvpn` (if necessary with additional files like certificates) and start the container again.  
-You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD`, which will be used for all VPN config files if set or manually store your VPN credentials in `openvpn/FILENAME_credentials.conf`.
+You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD` or store your credentials in `openvpn/credentials.conf`. Those credentials will be used to create credential files for all VPN configs initially. 
+If you manually store your VPN credentials in `openvpn/FILENAME_credentials.conf`, those will be used for the particular VPN config.
 
 ### Example credentials file
 ```
