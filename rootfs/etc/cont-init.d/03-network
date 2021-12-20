@@ -5,7 +5,7 @@
 # Network environment
 
 # Identify docker bridge interface name (probably eth0)
-DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo|tun|tap|wg" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
+DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo|tun|tap|wg|${VPN_CONFIG_NAME}" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
 if [[ "${DEBUG}" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${DOCKER_INTERFACE}"
 fi
@@ -93,12 +93,6 @@ fi
 
 ## Input
 
-# Set policy to drop ipv4 for input
-iptables -P INPUT DROP
-
-# Set policy to drop ipv6 for input
-ip6tables -P INPUT DROP 1>&- 2>&-
-
 # Accept input to tunnel adapter
 iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -m comment --comment "Accept input from tunnel adapter" -j ACCEPT
 
@@ -106,10 +100,16 @@ iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -m comment --comment "Accept input fro
 iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept input from internal Docker network" -j ACCEPT
 
 # Accept input to vpn gateway
-iptables -A INPUT -i "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -m comment --comment "Accept input of VPN gateway" -j ACCEPT
+iptables -A INPUT -i "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -s "${VPN_REMOTE}" -m comment --comment "Accept input of VPN gateway" -j ACCEPT
 
 # Accept input to qBittorrent webui port
 iptables -A INPUT -i "${DOCKER_INTERFACE}" -p tcp --dport 8080 -m comment --comment "Accept input to qBittorrent webui port" -j ACCEPT
+
+# Set policy to drop ipv4 for input
+iptables -P INPUT DROP
+
+# Set policy to drop ipv6 for input
+ip6tables -P INPUT DROP 1>&- 2>&-
 
 # Additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
@@ -134,22 +134,23 @@ iptables -A INPUT -i lo -m comment --comment "Accept input to internal loopback"
 
 ## Output
 
-# Set policy to drop ipv4 for output
-iptables -P OUTPUT DROP
-
-# Set policy to drop ipv6 for output
-ip6tables -P OUTPUT DROP 1>&- 2>&-
-
+# Accept output to tunnel adapter
 iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -m comment --comment "Accept output to tunnel adapter" -j ACCEPT
 
 # Accept output to/from internal docker network
 iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept output to internal Docker network" -j ACCEPT
 
 # Accept output from vpn gateway
-iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -m comment --comment "Accept output of VPN gateway" -j ACCEPT
+iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -d "${VPN_REMOTE}" -m comment --comment "Accept output of VPN gateway" -j ACCEPT
 
 # Accept output from qBittorrent webui port - used for lan access
 iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p tcp --sport 8080 -m comment --comment "Accept output from qBittorrent webui port" -j ACCEPT
+
+# Set policy to drop ipv4 for output
+iptables -P OUTPUT DROP
+
+# Set policy to drop ipv6 for output
+ip6tables -P OUTPUT DROP 1>&- 2>&-
 
 # Additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then

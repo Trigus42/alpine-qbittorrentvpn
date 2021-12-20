@@ -70,7 +70,7 @@ else
 	export VPN_ENABLED="yes"
 fi
 
-if [[ $VPN_ENABLED == "yes" ]]; then
+if [[ $VPN_ENABLED != "no" ]]; then
     # Check if VPN_TYPE is set.
 	if [[ -z "${VPN_TYPE}" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_TYPE not set, defaulting to Wireguard."
@@ -80,15 +80,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export VPN_TYPE="wireguard"
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_TYPE defined as '${VPN_TYPE}'"
-	fi
-
-    # Wildcard search for openvpn config files (match on first result)
-	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
-		export VPN_CONFIG
-	else
-		VPN_CONFIG=$(find /config/wireguard -maxdepth 1 -name "*.conf" -print -quit)
-		export VPN_CONFIG
 	fi
 elif [[ $VPN_ENABLED == "no" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] You have set the VPN to disabled, your connection will NOT be secure."
@@ -124,7 +115,7 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("LAN_NETWORK" "PUID" "PGID" "VPN_TYPE" "VPN_CONFIG")
+export_vars=("LAN_NETWORK" "PUID" "PGID" "VPN_TYPE")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"

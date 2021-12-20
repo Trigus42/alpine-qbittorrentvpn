@@ -1,6 +1,25 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+print_exit_info () {
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip addr show' output:"
+	echo "--------------------"
+	ip addr show
+	echo "--------------------"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip route show table main' output:"
+	echo "--------------------"
+	ip route show table main
+	echo "--------------------"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip rule' output:"
+	echo "--------------------"
+	ip rule
+	echo "--------------------"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'netstat -lpn' output:"
+	echo "--------------------"
+	netstat -lpn
+	echo "--------------------"
+}
+
 # Wait until qbittorrent-nox is up
 while ! (pgrep -o qbittorrent-nox >/dev/null 2>&1); do
     sleep 0.1
@@ -30,12 +49,14 @@ while :; do
     # Check if it is possible to bypass the VPN
     if (ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
+        print_exit_info
         exit 1
 	fi
 
     # Check if HEALTH_CHECK_HOST is reachable
     if ! (ping -c 1 $HOST > /dev/null 2>&1); then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
+        print_exit_info
         exit 1
     fi
 
