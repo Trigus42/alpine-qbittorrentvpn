@@ -2,7 +2,7 @@ FROM alpine:3.14 as builder
 
 ARG BUILD_DATE
 # You can find release tags at https://github.com/qbittorrent/qBittorrent/releases
-ARG QBITTORRENT_VERSION="release-4.3.8"
+ARG QBITTORRENT_VERSION="release-4.3.9"
 
 WORKDIR /root/
 

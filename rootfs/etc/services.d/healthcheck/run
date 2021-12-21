@@ -55,9 +55,13 @@ while :; do
 
     # Check if HEALTH_CHECK_HOST is reachable
     if ! (ping -c 1 $HOST > /dev/null 2>&1); then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
-        print_exit_info
-        exit 1
+        # Wait 3 seconds for connection to recover
+        sleep 3
+        if ! (ping -c 1 $HOST > /dev/null 2>&1); then
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
+            print_exit_info
+            exit 1
+        fi
     fi
 
     sleep ${INTERVAL}

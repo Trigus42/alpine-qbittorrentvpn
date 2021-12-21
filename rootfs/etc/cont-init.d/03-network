@@ -105,12 +105,6 @@ iptables -A INPUT -i "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT
 # Accept input to qBittorrent webui port
 iptables -A INPUT -i "${DOCKER_INTERFACE}" -p tcp --dport 8080 -m comment --comment "Accept input to qBittorrent webui port" -j ACCEPT
 
-# Set policy to drop ipv4 for input
-iptables -P INPUT DROP
-
-# Set policy to drop ipv6 for input
-ip6tables -P INPUT DROP 1>&- 2>&-
-
 # Additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 	# Split comma separated string into list from ADDITIONAL_PORTS env variable
@@ -146,12 +140,6 @@ iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --dport "$VPN_POR
 # Accept output from qBittorrent webui port - used for lan access
 iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p tcp --sport 8080 -m comment --comment "Accept output from qBittorrent webui port" -j ACCEPT
 
-# Set policy to drop ipv4 for output
-iptables -P OUTPUT DROP
-
-# Set policy to drop ipv6 for output
-ip6tables -P OUTPUT DROP 1>&- 2>&-
-
 # Additional port list for scripts or container linking
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 	# Split comma separated string into list from ADDITIONAL_PORTS env variable
@@ -173,6 +161,20 @@ fi
 
 # Accept output from local loopback adapter
 iptables -A OUTPUT -o lo -m comment --comment "Accept output from internal loopback" -j ACCEPT
+
+## Policies
+
+# Set policy to drop ipv4 for input
+iptables -P INPUT DROP
+
+# Set policy to drop ipv6 for input
+ip6tables -P INPUT DROP 1>&- 2>&-
+
+# Set policy to drop ipv4 for output
+iptables -P OUTPUT DROP
+
+# Set policy to drop ipv6 for output
+ip6tables -P OUTPUT DROP 1>&- 2>&-
 
 if [[ "${DEBUG}" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] iptables table 'filter' defined as follows..."
