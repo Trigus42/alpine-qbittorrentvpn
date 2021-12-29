@@ -1,3 +1,2 @@
 #!/bin/bash
-
 kill -CONT "$(cat /tmp/stopped.pid)"
