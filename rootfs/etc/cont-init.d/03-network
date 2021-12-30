@@ -2,6 +2,13 @@
 # shellcheck shell=bash
 
 ##########
+# Skip - Only needed if VPN is enabled
+
+if [[ $VPN_ENABLED == "no" ]]; then
+    exit 0
+fi
+
+##########
 # Network environment
 
 # Identify docker bridge interface name (probably eth0)

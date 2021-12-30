@@ -46,12 +46,14 @@ if [[ -z "${HEALTH_CHECK_INTERVAL}" ]]; then
 fi
 
 while :; do
-    # Check if it is possible to bypass the VPN
-    if (ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
-        print_exit_info
-        exit 1
-	fi
+    if [[ $VPN_ENABLED != "no" ]]; then
+        # Check if it is possible to bypass the VPN
+        if (ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
+            print_exit_info
+            exit 1
+        fi
+    fi
 
     # Check if HEALTH_CHECK_HOST is reachable
     if ! (ping -c 1 $HOST > /dev/null 2>&1); then
