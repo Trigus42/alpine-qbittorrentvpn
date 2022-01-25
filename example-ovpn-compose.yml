@@ -6,9 +6,6 @@ services:
     image: trigus42/qbittorrentvpn
     container_name: qbittorrent
     environment:
-      - PUID=1001
-      - PGID=1001
-      - UMASK=002
       - VPN_ENABLED=yes
       - VPN_TYPE=openvpn
       - VPN_USERNAME=YOURUSERNAME
@@ -16,7 +13,7 @@ services:
       - LAN_NETWORK=192.168.0.0/24
       - ENABLE_SSL=yes
     volumes:
-      - '/server/qbittorrent/:/config'
+      - './config/:/config'
     ports:
       - 80:8080
       - 443:8080
