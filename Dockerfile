@@ -37,8 +37,9 @@ RUN \
 # Install s6-overlay
 COPY ./build/s6-overlay-arch /tmp/s6-overlay-arch
 RUN \
+    chmod +x /tmp/s6-overlay-arch; \
     wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
-    tar xzf /tmp/s6_overlay.tar.gz -C /; \
+    tar -xf /tmp/s6_overlay.tar.gz -C /; \
     rm -r /tmp/*
 
 COPY rootfs /
