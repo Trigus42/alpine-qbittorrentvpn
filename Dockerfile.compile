@@ -2,7 +2,7 @@ FROM alpine:3.14 as builder
 
 ARG BUILD_DATE
 # You can find release tags at https://github.com/qbittorrent/qBittorrent/releases
-ARG QBITTORRENT_VERSION="release-4.3.9"
+ARG QBITTORRENT_VERSION="release-4.4.0"
 
 WORKDIR /root/
 
@@ -64,36 +64,35 @@ RUN \
     # Remove build files
     rm -r /root/libtorrent /root/qbittorrent
 
+COPY ./build/s6-overlay-arch /tmp/s6-overlay-arch
+COPY rootfs /
+
 RUN \
     # Install tools
     apk update; \
     apk add --no-cache \
-    wget \
-    bash \
-    wireguard-tools \
-    dos2unix \
-    openvpn \
-    grep \
-    net-tools \
-    openresolv \
-    iptables \
-    ipcalc \
-    iputils \
-    openssl \
-    qt5-qtbase \
-    libexecinfo \
-    tzdata; \
-    exit 0
-
-# Install s6-overlay
-COPY ./build/s6-overlay-arch /tmp/s6-overlay-arch
-RUN \
+        bash \
+        dos2unix \
+        grep \
+        ipcalc \
+        iptables \
+        iputils \
+        libexecinfo \
+        net-tools \
+        openresolv \
+        openssl \
+        openvpn \
+        qt5-qtbase \
+        tzdata \
+        wget \
+        wireguard-tools; \
+    # Install s6-overlay
     chmod +x /tmp/s6-overlay-arch; \
     wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
     tar -xf /tmp/s6_overlay.tar.gz -C /; \
-    rm -r /tmp/*
-
-COPY rootfs /
+    rm -r /tmp/*; \
+    # Set exec permissions
+    chmod +x -R /helper/ /etc/cont-init.d/ /etc/services.d/
 
 VOLUME /config /downloads
 EXPOSE 8080
