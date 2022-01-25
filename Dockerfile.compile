@@ -81,7 +81,8 @@ RUN \
     iputils \
     openssl \
     qt5-qtbase \
-    libexecinfo; \
+    libexecinfo \
+    tzdata; \
     exit 0
 
 # Install s6-overlay

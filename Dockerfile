@@ -24,7 +24,8 @@ RUN \
         iputils \
         openssl \
         qt5-qtbase \
-        libexecinfo; \
+        libexecinfo \
+        tzdata; \
     # Install qbittorrent-nox
     apk add --no-cache \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
