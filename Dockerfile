@@ -43,8 +43,6 @@ RUN \
     # Set exec permissions
     chmod +x -R /helper/ /etc/cont-init.d/ /etc/services.d/
 
-COPY rootfs /
-
 VOLUME /config /downloads
 EXPOSE 8080
 
