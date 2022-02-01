@@ -95,13 +95,13 @@ Testing and feedback is appreciated.
 # Environment Variables
 | Variable | Function | Example | Default |
 |----------|----------|----------|----------|
-|`ADDITIONAL_PORTS`| Adding a comma delimited list of ports will allow these ports via the iptables script |`ADDITIONAL_PORTS=1234,8112`||
+|`ADDITIONAL_PORTS`| Comma delimited list of ports which will be whitelisted in the firewall |`ADDITIONAL_PORTS=1234,8112`||
 |`DEBUG`| Print information useful for debugging in log |`yes`|`no`|
 |`ENABLE_SSL`| Let the container handle SSL (yes/no) |`ENABLE_SSL=yes`|`no`|
 |`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=8.8.8.8`|`1.1.1.1`|
 |`HEALTH_CHECK_INTERVAL`| This is the time in seconds that the container waits to see if the VPN still works |`HEALTH_CHECK_INTERVAL=5`|`5`|
 |`INSTALL_PYTHON3`| Set this to `yes` to let the container install Python3 |`INSTALL_PYTHON3=yes`|`no`|
-|`LAN_NETWORK`| Comma delimited local Network's with CIDR notation |`LAN_NETWORK=192.168.0.0/24,10.10.0.0/24`||
+|`LAN_NETWORK`| Comma delimited local networks with CIDR notation |`LAN_NETWORK=192.168.0.0/16,192.168.178.0/24`||
 |`NAME_SERVERS`| Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID applied to /config files and /downloads  |`PGID=100`|`1000`|
 |`PUID`| UID applied to /config files and /downloads |`PUID=99`|`1000`|
