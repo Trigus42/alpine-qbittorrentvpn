@@ -48,16 +48,21 @@ fi
 ##########
 # OpenVPN credentails
 
-# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+    # Remove auth-user-pass line(s) from VPN config
+    sed -i -E 's/auth-user-pass.*//g' "${VPN_CONFIG}"
+    # Use credentials from credentials file if it exists
     if [[ -f /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Using credentials from /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
-    elif [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD+set}"  ]]; then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Using credentials from env vars"
+    # Else use credentials from env vars if set and non empty
+    elif [[ -n "${VPN_USERNAME}" ]] && [[ -n "${VPN_PASSWORD}" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Copying credentials from env vars to /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
         echo "${VPN_USERNAME}" > /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
         echo "${VPN_PASSWORD}" >> /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
-    elif [[ "${VPN_USERNAME+set}" = set  ]] && [[ "${VPN_PASSWORD+set}" = set  ]]; then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Credentials explicitly set to empty"
+    # Else if both username and password are set but empty, assume custom authentication method
+    elif [[ -z "${VPN_USERNAME-unset}" ]] && [[ -z "${VPN_PASSWORD-unset}" ]]; then
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Credentials explicitly set to empty string"
+    # Else if a credentials.conf file exists, assume it is valid for all VPN configs
     elif [[ -f /config/openvpn/credentials.conf ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Copying credentials from /config/openvpn/credentials.conf to /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
         cp /config/openvpn/credentials.conf /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
