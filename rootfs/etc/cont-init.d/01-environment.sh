@@ -28,6 +28,38 @@ else
 fi
 
 ##########
+# Network environment
+
+# Identify docker bridge interface name (probably eth0)
+DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo|tun|tap|wg" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${DOCKER_INTERFACE}"
+fi
+
+# Identify ip of docker bridge interface
+docker_ip="$(ip -4 addr show "${DOCKER_INTERFACE}" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IP defined as ${docker_ip}"
+fi
+
+# Identify netmask of docker bridge interface
+docker_mask=$(ifconfig "${DOCKER_INTERFACE}" | grep -o "Mask:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker netmask defined as ${docker_mask}"
+fi
+
+# Convert netmask into CIDR format
+DOCKER_NETWORK_CIDR=$(ipcalc "${docker_ip}" "${docker_mask}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Docker network defined as ${DOCKER_NETWORK_CIDR}"
+
+# Get default gateway of interfaces as looping through them
+DEFAULT_GATEWAY=$(ip -4 route list 0/0 | cut -d ' ' -f 3)
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Default gateway defined as ${DEFAULT_GATEWAY}"
+fi
+
+
+##########
 # PUID/PGID
 
 if [[ -z "${PUID}" ]]; then
@@ -115,7 +147,7 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("LAN_NETWORK" "PUID" "PGID" "VPN_TYPE")
+export_vars=("LAN_NETWORK" "DOCKER_INTERFACE" "DOCKER_NETWORK_CIDR" "DEFAULT_GATEWAY" "PUID" "PGID" "VPN_TYPE")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"

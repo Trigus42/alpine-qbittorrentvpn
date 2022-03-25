@@ -203,9 +203,9 @@ if [[ $VPN_ENABLED == "yes" ]]; then
         echo "--------------------"
         # Check if credential file exists and is not empty
         if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-            exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
+            exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
         else
-            exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
+            exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
         fi
 
         # Pause execution (until openvpn connection is established and resume-after-connect script is run)

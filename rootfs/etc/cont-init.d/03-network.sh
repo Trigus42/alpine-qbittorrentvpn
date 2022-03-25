@@ -9,35 +9,7 @@ if [[ $VPN_ENABLED == "no" ]]; then
 fi
 
 ##########
-# Network environment
-
-# Identify docker bridge interface name (probably eth0)
-DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo|tun|tap|wg|${VPN_CONFIG_NAME}" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
-if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${DOCKER_INTERFACE}"
-fi
-
-# Identify ip for docker bridge interface
-docker_ip="$(ip -4 addr show "${DOCKER_INTERFACE}" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
-if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IP defined as ${docker_ip}"
-fi
-
-# Identify netmask for docker bridge interface
-docker_mask=$(ifconfig "${DOCKER_INTERFACE}" | grep -o "Mask:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
-if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker netmask defined as ${docker_mask}"
-fi
-
-# Convert netmask into CIDR format
-docker_network_cidr=$(ipcalc "${docker_ip}" "${docker_mask}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Docker network defined as ${docker_network_cidr}"
-
-##########
 # Packet routing
-
-# get default gateway of interfaces as looping through them
-DEFAULT_GATEWAY=$(ip -4 route list 0/0 | cut -d ' ' -f 3)
 
 # Split comma separated string into list from LAN_NETWORK env variable
 IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
@@ -104,7 +76,7 @@ fi
 iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -m comment --comment "Accept input from tunnel adapter" -j ACCEPT
 
 # Accept input from/to internal docker network
-iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept input from internal Docker network" -j ACCEPT
+iptables -A INPUT -s "${DOCKER_NETWORK_CIDR}" -d "${DOCKER_NETWORK_CIDR}" -m comment --comment "Accept input from internal Docker network" -j ACCEPT
 
 # Accept input to vpn gateway
 iptables -A INPUT -i "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -s "${VPN_REMOTE}" -m comment --comment "Accept input of VPN gateway" -j ACCEPT
@@ -139,7 +111,7 @@ iptables -A INPUT -i lo -m comment --comment "Accept input to internal loopback"
 iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -m comment --comment "Accept output to tunnel adapter" -j ACCEPT
 
 # Accept output to/from internal docker network
-iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -m comment --comment "Accept output to internal Docker network" -j ACCEPT
+iptables -A OUTPUT -s "${DOCKER_NETWORK_CIDR}" -d "${DOCKER_NETWORK_CIDR}" -m comment --comment "Accept output to internal Docker network" -j ACCEPT
 
 # Accept output from vpn gateway
 iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -d "${VPN_REMOTE}" -m comment --comment "Accept output of VPN gateway" -j ACCEPT
