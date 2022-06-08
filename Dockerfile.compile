@@ -1,8 +1,7 @@
 FROM alpine:3.14 as builder
 
+ARG QBITTORRENT_VERSION
 ARG BUILD_DATE
-# You can find release tags at https://github.com/qbittorrent/qBittorrent/releases
-ARG QBITTORRENT_VERSION="release-4.4.0"
 
 WORKDIR /root/
 
@@ -28,7 +27,7 @@ RUN \
 # Compile qBittorrent
 RUN \
     git clone --shallow-submodules --recurse-submodules https://github.com/qbittorrent/qBittorrent.git qbittorrent && cd qbittorrent; \
-    git checkout ${QBITTORRENT_VERSION}; \
+    git checkout release-$QBITTORRENT_VERSION; \
     cmake -Wno-dev -G Ninja -B build \
         -D CMAKE_BUILD_TYPE="release" \
         -D CMAKE_CXX_STANDARD=17 \
