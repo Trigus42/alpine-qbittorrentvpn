@@ -1,7 +1,6 @@
 FROM alpine:3.14
 
-# You can find the available package versions at https://pkgs.alpinelinux.org/packages?name=qbittorrent-nox
-ARG QBITTORRENT_VERSION="4.4.0-r0"
+ARG QBITTORRENT_VERSION
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
 ARG S6_OVERLAY_VERSION="v2.2.0.3"
 

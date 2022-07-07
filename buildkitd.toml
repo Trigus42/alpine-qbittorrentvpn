@@ -1,5 +1,3 @@
-root = "/var/lib/buildkit"
-
 [worker.oci]
   enabled = true
   max-parallelism = 1

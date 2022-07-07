@@ -58,15 +58,15 @@ $ docker run --privileged -d \
 You can use the `Dockerfile` with all architectures and versions of qBT that are listed [here](https://pkgs.alpinelinux.org/packages?name=qbittorrent-nox).  
 You can find more information on the `Architecture` tags [here](https://wiki.alpinelinux.org/wiki/Architecture).  
 
-The `Dockerfile.compile` should work for all architectures.
+`Dockerfile.compile` should work for all architectures. Release numbers can be found [here](https://github.com/qbittorrent/qBittorrent/tags).
 
 &NewLine;
 ```sh
 $ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
 $ cd alpine-qbittorrentvpn
 
-$ docker build -f Dockerfile -t qbittorrentvpn .
-$ docker build -f Dockerfile.compile -t qbittorrentvpn .
+$ QBITTORRENT_VERSION={ALPINE-REPO-VERSION} docker build -f Dockerfile -t qbittorrentvpn .
+$ QBITTORRENT_VERSION={RELEASE-NR} docker build -f Dockerfile.compile -t qbittorrentvpn .
 
 $ docker run --privileged -d \
              -v /your/config/path/:/config \
@@ -77,6 +77,19 @@ $ docker run --privileged -d \
              -p 8080:8080 \
              --restart unless-stopped \
              qbittorrentvpn
+```
+
+Build for all supported architectures:
+```
+$ QBITTORRENT_VERSION={RELEASE-NR} docker buildx bake -f bake.yml
+```
+
+If you want to use this command to push the images to a registry (append `--push` to the above command), you have to modify the `image` setting in `bake.yml`.
+
+Compiling for many architectures simultaneously can be very demanding. You can create and use a builder instance with no concurrency using these commands: 
+```sh
+$ docker buildx create --config buildkitd.toml --name no_concurrency
+$ QBITTORRENT_VERSION={RELEASE-NR} docker buildx bake -f bake.yml --builder no_concurrency
 ```
 
 # Docker Tags
