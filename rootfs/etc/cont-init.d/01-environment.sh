@@ -31,7 +31,7 @@ fi
 # Network environment
 
 # Identify docker bridge interface name (probably eth0)
-DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo|tun|tap|wg" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
+DOCKER_INTERFACE="$(netstat -ie | grep -vE "lo" | sed -n '1!p' | grep -P -o -m 1 '^[\w]+')"
 if [[ "${DEBUG}" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${DOCKER_INTERFACE}"
 fi
