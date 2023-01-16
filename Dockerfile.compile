@@ -20,7 +20,7 @@ RUN \
         -D CMAKE_CXX_STANDARD=17 \
         -D CMAKE_INSTALL_LIBDIR="lib" \
         -D CMAKE_INSTALL_PREFIX="/usr/local"; \
-    cmake --build build; \
+    nice -n19 cmake --build build; \
     cmake --install build
 
 # Compile qBittorrent
@@ -33,7 +33,7 @@ RUN \
         -D CMAKE_CXX_STANDARD_LIBRARIES="/usr/lib/libexecinfo.so" \
         -D CMAKE_INSTALL_PREFIX="/usr/local" \
         -D GUI=OFF; \
-    cmake --build build
+    nice -n19 cmake --build build
 
 FROM alpine:3.14
 
