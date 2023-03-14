@@ -12,15 +12,15 @@ fi
 # Packet routing
 
 # Split comma separated string into list from LAN_NETWORK env variable
-IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
+IFS=',' read -ra lan_network_list <<< "$LAN_NETWORK"
 
 # Process lan networks in the list
 for lan_network_item in "${lan_network_list[@]}"; do
 	# Strip whitespace from start and end of lan_network_item
-	lan_network_item=$(echo "${lan_network_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+	lan_network_item=$(echo "$lan_network_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${lan_network_item} as route via docker ${DOCKER_INTERFACE}" 
-	ip route add "${lan_network_item}" via "${DEFAULT_GATEWAY}" dev "${DOCKER_INTERFACE}" &> /dev/null
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding $lan_network_item as route via docker $DOCKER_INTERFACE" 
+	ip route add "$lan_network_item" via "$DEFAULT_GATEWAY" dev "$DOCKER_INTERFACE" &> /dev/null
 
 	ip_route_add_exit_code=$?
 
@@ -31,7 +31,7 @@ for lan_network_item in "${lan_network_list[@]}"; do
 	fi
 done
 
-## Setup iptables marks to allow routing of defined ports via "${DOCKER_INTERFACE}"
+## Setup iptables marks to allow routing of defined ports via "$DOCKER_INTERFACE"
 
 # check we have iptable_mangle, if so setup fwmark
 lsmod | grep iptable_mangle &> /dev/null
@@ -41,10 +41,10 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	if [[ $SET_FWMARK == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding fwmark for webui."
 
-		# Setup route for qBittorrent webui using set-mark to route traffic for port 8080 to "${DOCKER_INTERFACE}"
+		# Setup route for qBittorrent webui using set-mark to route traffic for port 8080 to "$DOCKER_INTERFACE"
 		echo "8080    webui" >> /etc/iproute2/rt_tables
 		ip rule add fwmark 1 table webui
-		ip route add default via "${DEFAULT_GATEWAY}" table webui
+		ip route add default via "$DEFAULT_GATEWAY" table webui
 
 		# Add mark for traffic on port 8080 (used by the web interface)
 		iptables -t mangle -A OUTPUT -p tcp --dport 8080 -j MARK --set-mark 1
@@ -56,7 +56,7 @@ elif [[ $SET_FWMARK == "yes" ]]; then
 	exit 1
 fi
 
-if [[ "${DEBUG}" == "yes" ]]; then
+if [[ "$DEBUG" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] 'main' routing table defined as follows..."
 	echo "--------------------"
 	ip route show table main
@@ -70,76 +70,91 @@ fi
 ##########
 # Iptable rules
 
+function add_comment_rule() {
+    local rule="$1"
+    if [[ "$xt_comment_exit_code" -eq 0 ]]; then
+        eval $rule
+    else
+        # remove the comment part of the rule
+        local no_comment_rule=$(echo $rule | sed -E "s/-m comment --comment \"[^']+' //" | tr -d '\n')
+        eval $no_comment_rule
+    fi
+}
+
+# Check if xt_comment module is available
+lsmod | grep xt_comment &> /dev/null
+xt_comment_exit_code=$?
+
 ## Input
 
 # Accept input to tunnel adapter
-iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -m comment --comment "Accept input from tunnel adapter" -j ACCEPT
+add_comment_rule "iptables -A INPUT -i $VPN_DEVICE_TYPE -m comment --comment \"Accept input from tunnel adapter\" -j ACCEPT"
 
 # Accept input from/to internal docker network
-iptables -A INPUT -s "${DOCKER_NETWORK_CIDR}" -d "${DOCKER_NETWORK_CIDR}" -m comment --comment "Accept input from internal Docker network" -j ACCEPT
+add_comment_rule "iptables -A INPUT -s $DOCKER_NETWORK_CIDR -d $DOCKER_NETWORK_CIDR -m comment --comment \"Accept input from internal Docker network\" -j ACCEPT"
 
 # Accept input to vpn gateway
-iptables -A INPUT -i "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --sport "$VPN_PORT" -s "${VPN_REMOTE}" -m comment --comment "Accept input of VPN gateway" -j ACCEPT
+add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p $VPN_PROTOCOL --sport $VPN_PORT -s $VPN_REMOTE -m comment --comment \"Accept input of VPN gateway\" -j ACCEPT"
 
 # Accept input to qBittorrent webui port
-iptables -A INPUT -i "${DOCKER_INTERFACE}" -p tcp --dport 8080 -m comment --comment "Accept input to qBittorrent webui port" -j ACCEPT
+add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p tcp --dport 8080 -m comment --comment \"Accept input to qBittorrent webui port\" -j ACCEPT"
 
 # Additional port list for scripts or container linking
-if [[ -n "${ADDITIONAL_PORTS}" ]]; then
+if [[ -n "$ADDITIONAL_PORTS" ]]; then
 	# Split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
+	IFS=',' read -ra additional_port_list <<< "$ADDITIONAL_PORTS"
 
 	# Process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
 
 		# Strip whitespace from start and end of additional_port_item
-		additional_port_item=$(echo "${additional_port_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+		additional_port_item=$(echo "$additional_port_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional incoming port ${additional_port_item} for ${DOCKER_INTERFACE}"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional incoming port $additional_port_item for $DOCKER_INTERFACE"
 
-		# Accept input to additional port for "${DOCKER_INTERFACE}"
-		iptables -A INPUT -i "${DOCKER_INTERFACE}" -p tcp --dport "${additional_port_item}" -m comment --comment "Accept input to additional port" -j ACCEPT
+		# Accept input to additional port for "$DOCKER_INTERFACE"
+		add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p tcp --dport $additional_port_item -m comment --comment \"Accept input to additional port\" -j ACCEPT"
 	done
 fi
 
 # Accept input to local loopback
-iptables -A INPUT -i lo -m comment --comment "Accept input to internal loopback" -j ACCEPT
+add_comment_rule "iptables -A INPUT -i lo -m comment --comment \"Accept input to internal loopback\" -j ACCEPT"
 
 ## Output
 
 # Accept output to tunnel adapter
-iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -m comment --comment "Accept output to tunnel adapter" -j ACCEPT
+add_comment_rule "iptables -A OUTPUT -o $VPN_DEVICE_TYPE -m comment --comment \"Accept output to tunnel adapter\" -j ACCEPT"
 
 # Accept output to/from internal docker network
-iptables -A OUTPUT -s "${DOCKER_NETWORK_CIDR}" -d "${DOCKER_NETWORK_CIDR}" -m comment --comment "Accept output to internal Docker network" -j ACCEPT
+add_comment_rule "iptables -A OUTPUT -s $DOCKER_NETWORK_CIDR -d $DOCKER_NETWORK_CIDR -m comment --comment \"Accept output to internal Docker network\" -j ACCEPT"
 
 # Accept output from vpn gateway
-iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p "$VPN_PROTOCOL" --dport "$VPN_PORT" -d "${VPN_REMOTE}" -m comment --comment "Accept output of VPN gateway" -j ACCEPT
+add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p $VPN_PROTOCOL --dport $VPN_PORT -d $VPN_REMOTE -m comment --comment \"Accept output of VPN gateway\" -j ACCEPT"
 
 # Accept output from qBittorrent webui port - used for lan access
-iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p tcp --sport 8080 -m comment --comment "Accept output from qBittorrent webui port" -j ACCEPT
+add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p tcp --sport 8080 -m comment --comment \"Accept output from qBittorrent webui port\" -j ACCEPT"
 
 # Additional port list for scripts or container linking
-if [[ -n "${ADDITIONAL_PORTS}" ]]; then
+if [[ -n "$ADDITIONAL_PORTS" ]]; then
 	# Split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
+	IFS=',' read -ra additional_port_list <<< "$ADDITIONAL_PORTS"
 
 	# Process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
 
 		# Strip whitespace from start and end of additional_port_item
-		additional_port_item=$(echo "${additional_port_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+		additional_port_item=$(echo "$additional_port_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional outgoing port ${additional_port_item} for ${DOCKER_INTERFACE}"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional outgoing port $additional_port_item for $DOCKER_INTERFACE"
 
 		# Accept output to additional port for lan interface
-		iptables -A OUTPUT -o "${DOCKER_INTERFACE}" -p tcp --sport "${additional_port_item}" -m comment --comment "Accept output from additional port" -j ACCEPT
+		add_comment_rule "iptables -A OUTPUT -o \"$DOCKER_INTERFACE\" -p tcp --sport \"$additional_port_item\" -m comment --comment \"Accept output from additional port\" -j ACCEPT"
 
 	done
 fi
 
 # Accept output from local loopback adapter
-iptables -A OUTPUT -o lo -m comment --comment "Accept output from internal loopback" -j ACCEPT
+add_comment_rule "iptables -A OUTPUT -o lo -m comment --comment \"Accept output from internal loopback\" -j ACCEPT"
 
 ## Policies
 
@@ -155,7 +170,7 @@ iptables -P OUTPUT DROP
 # Set policy to drop ipv6 for output
 ip6tables -P OUTPUT DROP 1>&- 2>&-
 
-if [[ "${DEBUG}" == "yes" ]]; then
+if [[ "$DEBUG" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] iptables table 'filter' defined as follows..."
 	echo "--------------------"
 	iptables -S -t filter
