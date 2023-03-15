@@ -76,7 +76,7 @@ function add_comment_rule() {
         eval $rule
     else
         # remove the comment part of the rule
-        local no_comment_rule=$(echo $rule | sed -E "s/-m comment --comment \"[^']+' //" | tr -d '\n')
+        local no_comment_rule=$(echo $rule | sed -E "s/-m comment --comment \\\"[^\"]+\\\"//" | tr -d '\n')
         eval $no_comment_rule
     fi
 }
