@@ -8,7 +8,9 @@ mkdir -p /config/qBittorrent/config
 chown -R "${PUID}":"${PGID}" /config/qBittorrent
 
 # Set the rights on the /downloads folder
-chown -R "${PUID}":"${PGID}" /downloads
+if [[ $DOWNLOAD_DIR_CHOWN != "no" ]]; then
+	chown -R "${PUID}":"${PGID}" /downloads
+fi
 
 # Check if qBittorrent.conf exists, if not, copy the template over
 if [ ! -e /config/qBittorrent/config/qBittorrent.conf ]; then

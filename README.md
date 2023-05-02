@@ -65,8 +65,8 @@ You can find more information on the `Architecture` tags [here](https://wiki.alp
 $ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
 $ cd alpine-qbittorrentvpn
 
-$ QBITTORRENT_VERSION={ALPINE-REPO-VERSION} docker build -f Dockerfile -t qbittorrentvpn .
-$ QBITTORRENT_VERSION={RELEASE-NR} docker build -f Dockerfile.compile -t qbittorrentvpn .
+$ QBITTORRENT_TAG={ALPINE-REPO-VERSION} docker build -f Dockerfile -t qbittorrentvpn .
+$ QBITTORRENT_TAG={FULL_TAG} docker build -f Dockerfile.compile -t qbittorrentvpn .
 
 $ docker run --privileged -d \
              -v /your/config/path/:/config \
@@ -81,7 +81,7 @@ $ docker run --privileged -d \
 
 Build for all supported architectures:
 ```
-$ QBITTORRENT_VERSION={RELEASE-NR} docker buildx bake -f bake.yml
+$ QBITTORRENT_TAG={FULL_TAG} docker buildx bake -f bake.yml
 ```
 
 If you want to use this command to push the images to a registry (append `--push` to the above command), you have to modify the `image` setting in `bake.yml`.
@@ -89,7 +89,7 @@ If you want to use this command to push the images to a registry (append `--push
 Compiling for many architectures simultaneously can be very demanding. You can create and use a builder instance with no concurrency using these commands: 
 ```sh
 $ docker buildx create --config buildkitd.toml --name no_concurrency
-$ QBITTORRENT_VERSION={RELEASE-NR} docker buildx bake -f bake.yml --builder no_concurrency
+$ QBITTORRENT_TAG={FULL_TAG} docker buildx bake -f bake.yml --builder no_concurrency
 ```
 
 # Docker Tags
@@ -110,14 +110,15 @@ Testing and feedback is appreciated.
 |----------|----------|----------|----------|
 |`ADDITIONAL_PORTS`| Comma delimited list of ports which will be whitelisted in the firewall |`ADDITIONAL_PORTS=1234,8112`||
 |`DEBUG`| Print information useful for debugging in log |`yes`|`no`|
+|`DOWNLOAD_DIR_CHOWN`| Whether or not to chown files in the `/downloads` directory to PUID and PGID |`no`|`yes`|
 |`ENABLE_SSL`| Let the container handle SSL (yes/no) |`ENABLE_SSL=yes`|`no`|
 |`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=8.8.8.8`|`1.1.1.1`|
 |`HEALTH_CHECK_INTERVAL`| This is the time in seconds that the container waits to see if the VPN still works |`HEALTH_CHECK_INTERVAL=5`|`5`|
 |`INSTALL_PYTHON3`| Set this to `yes` to let the container install Python3 |`INSTALL_PYTHON3=yes`|`no`|
 |`LAN_NETWORK`| Comma delimited local networks with CIDR notation |`LAN_NETWORK=192.168.0.0/16,192.168.178.0/24`||
 |`NAME_SERVERS`| Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
-|`PGID`| GID applied to /config files and /downloads  |`PGID=100`|`1000`|
-|`PUID`| UID applied to /config files and /downloads |`PUID=99`|`1000`|
+|`PGID`| GID to be applied to /config files and /downloads  |`PGID=100`|`1000`|
+|`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`PUID=99`|`1000`|
 |`SET_FWMARK`| Make web interface reachable for devices in networks not specified in `LAN_NETWORK` |`yes`|`no`|
 |`TZ`| Specify a timezone to use |`TZ=Europe/London`|`UTC`|
 |`UMASK`| Set file mode creation mask |`UMASK=002`|`002`|
