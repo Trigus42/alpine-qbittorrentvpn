@@ -33,12 +33,14 @@ else
 fi
 
 # Check if it is possible to bypass the VPN
-echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Trying to ping 1.1.1.1 and 8.8.8.8 over the docker interface for 500ms each..."
-if (timeout 0.5 ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (timeout 0.5 ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
-	exit 1
-else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Success: Could not connect. This means the firewall is most likely working properly."
+if [[ $VPN_ENABLED != "no" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Trying to ping 1.1.1.1 and 8.8.8.8 over the docker interface for 500ms each..."
+	if (timeout 0.5 ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (timeout 0.5 ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
+		exit 1
+	else
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Success: Could not connect. This means the firewall is most likely working properly."
+	fi
 fi
 
 exec s6-setuidgid "$(getent passwd "$PUID" | cut -d: -f1)" /bin/bash -c "$DAEMONSTRING"
