@@ -1,0 +1,9 @@
+#!/bin/sh
+
+TARGET_ARCH="$(uname -m)"
+
+if [ "$TARGET_ARCH" = "armv7l" ]; then
+    echo "armhf"
+else
+    echo $TARGET_ARCH
+fi
