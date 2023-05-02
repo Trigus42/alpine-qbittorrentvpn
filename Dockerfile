@@ -1,8 +1,8 @@
-FROM alpine:3.14
+FROM alpine:3.16
 
-ARG QBITTORRENT_VERSION
+ARG QBITTORRENT_TAG
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
-ARG S6_OVERLAY_VERSION="v2.2.0.3"
+ARG S6_OVERLAY_TAG="v2.2.0.3"
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
@@ -33,10 +33,10 @@ RUN \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-        qbittorrent-nox=${QBITTORRENT_VERSION}; \
+        qbittorrent-nox=${QBITTORRENT_TAG}; \
     # Install s6-overlay
     chmod +x /tmp/s6-overlay-arch; \
-    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
     tar -xf /tmp/s6_overlay.tar.gz -C /; \
     rm -r /tmp/*; \
     # Set exec permissions

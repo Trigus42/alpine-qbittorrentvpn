@@ -1,6 +1,7 @@
-FROM alpine:3.14 as builder
+FROM alpine:3.16 as builder
 
-ARG QBITTORRENT_VERSION
+ARG LIBTORRENT_TAG
+ARG QBITTORRENT_TAG
 ARG BUILD_DATE
 
 WORKDIR /root/
@@ -14,7 +15,7 @@ RUN \
 # Compile Libtorrent
 RUN \
     git clone --shallow-submodules --recurse-submodules https://github.com/arvidn/libtorrent.git libtorrent && cd libtorrent; \
-    git checkout "$(git tag -l --sort=-v:refname "v2*" | head -n 1)"; \
+    git checkout "${LIBTORRENT_TAG:-$(git tag -l --sort=-v:refname "v2*" | head -n 1)}"; \
     cmake -Wno-dev -G Ninja -B build \
         -D CMAKE_BUILD_TYPE="Release" \
         -D CMAKE_CXX_STANDARD=17 \
@@ -26,7 +27,7 @@ RUN \
 # Compile qBittorrent
 RUN \
     git clone --shallow-submodules --recurse-submodules https://github.com/qbittorrent/qBittorrent.git qbittorrent && cd qbittorrent; \
-    git checkout release-$QBITTORRENT_VERSION; \
+    git checkout "${QBITTORRENT_TAG:-$(git tag -l --sort=-v:refname "release*" | head -n 1)}"; \
     cmake -Wno-dev -G Ninja -B build \
         -D CMAKE_BUILD_TYPE="release" \
         -D CMAKE_CXX_STANDARD=17 \
@@ -35,10 +36,10 @@ RUN \
         -D GUI=OFF; \
     nice -n19 cmake --build build
 
-FROM alpine:3.14
+FROM alpine:3.16
 
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
-ARG S6_OVERLAY_VERSION="v2.2.0.3"
+ARG S6_OVERLAY_TAG="v2.2.0.3"
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
@@ -86,7 +87,7 @@ RUN \
         wireguard-tools; \
     # Install s6-overlay
     chmod +x /tmp/s6-overlay-arch; \
-    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/tmp/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz; \
     tar -xf /tmp/s6_overlay.tar.gz -C /; \
     rm -r /tmp/*; \
     # Set exec permissions

@@ -2,17 +2,16 @@ version: "3.3"
 
 services:
   qbittorrent:
-    image: trigus42/qbittorrentvpn:qbt${QBITTORRENT_VERSION}
+    image: trigus42/qbittorrentvpn
     build:
       context: .
       dockerfile: ./Dockerfile.compile
       args:
-        QBITTORRENT_VERSION: ${QBITTORRENT_VERSION}
+        QBITTORRENT_TAG: ${QBITTORRENT_TAG}
       x-bake:
         platforms:
           - "linux/amd64"
-          - "linux/arm/v6"
-          - "linux/arm/v7"
-          - "linux/arm64"
+          # - "linux/arm/v6"
+          # - "linux/arm/v7"
+          # - "linux/arm64"
         pull: true
-
