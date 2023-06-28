@@ -201,17 +201,33 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
         echo "--------------------"
+
         # Check if credential file exists and is not empty
         if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-            exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
+            sh -c 'echo $$ > /tmp/openvpn_pid; exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect' &
         else
-            exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
+            sh -c 'echo $$ > /tmp/openvpn_pid; exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect' &
         fi
 
-        # Pause execution (until openvpn connection is established and resume-after-connect script is run)
-        printf "%s" $$ > /tmp/stopped.pid
-        kill -STOP $$
+        while [[ ! -f /tmp/openvpn_pid ]]; do
+            sleep 0.1
+        done
+
+        openvpn_pid="$(cat /tmp/openvpn_pid)"
+
+        # Wait for startup
+        while :; do
+            # Process exited
+            if ! ps -p $openvpn_pid > /dev/null; then
+                exit 1
+            # Startup was successfull
+            elif [[ -f /tmp/openvpn_startup_finished ]]; then
+                break
+            fi
+            sleep 0.1
+        done
         echo "--------------------"
+
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		echo "--------------------"

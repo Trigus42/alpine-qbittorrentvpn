@@ -1,2 +1,2 @@
 #!/bin/bash
-kill -CONT "$(cat /tmp/stopped.pid)"
+touch /tmp/openvpn_startup_finished

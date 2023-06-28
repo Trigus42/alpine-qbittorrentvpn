@@ -22,7 +22,8 @@ RUN \
         qt5-qtbase \
         tzdata \
         wget \
-        wireguard-tools
+        wireguard-tools \
+        procps
 
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
 ARG S6_OVERLAY_TAG="v2.2.0.3"
