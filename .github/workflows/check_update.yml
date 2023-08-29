@@ -1,0 +1,51 @@
+name: Check for qBT update
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Download previous release info
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: qbt-release-info
+          workflow_conclusion: success
+          workflow: publish.yml
+          if_no_artifact_found: warn
+
+      - name: Get latest release
+        id: get_release
+        run: |
+          # Fetch release information and extract the release tag
+          RELEASE_TAG=$(curl -s https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "latest release: $RELEASE_TAG"
+
+      - name: Compare with previous release
+        id: compare_release
+        run: |
+          # Read the release info from the downloaded artifact
+          PREVIOUS_RELEASE=$(cat qbt-release-info 2> /dev/null || echo "NONE")
+          echo "previous release: $PREVIOUS_RELEASE"
+
+          # Compare the fetched release tag with the previous release tag
+          if [ "${{ steps.get_release.outputs.RELEASE_TAG }}" != "$PREVIOUS_RELEASE" ]; then
+            echo "release_changed=true" >> $GITHUB_OUTPUT
+            echo "Release changed: true"
+          else
+            echo "release_changed=false" >> $GITHUB_OUTPUT
+            echo "Release changed: false"
+          fi
+
+      - name: Call workflow to build docker image
+        if: steps.compare_release.outputs.release_changed == 'true'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: publish.yml
