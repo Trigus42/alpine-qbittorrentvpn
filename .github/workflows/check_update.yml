@@ -25,27 +25,26 @@ jobs:
         run: |
           # Fetch release information and extract the release tag
           RELEASE_TAG=$(curl -s https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
-          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
-          echo "latest release: $RELEASE_TAG"
+
+          echo "RELEASE_TAG=$RELEASE_TAG" | tee -a $GITHUB_ENV
+          echo "VERSION_NUMBER=$(echo $RELEASE_TAG | grep -P "\d(\.\d+)+" -o | head -n 1)" | tee -a $GITHUB_ENV
 
       - name: Compare with previous release
         id: compare_release
         run: |
           # Read the release info from the downloaded artifact
           PREVIOUS_RELEASE=$(cat qbt-release-info 2> /dev/null || echo "NONE")
-          echo "previous release: $PREVIOUS_RELEASE"
+          echo "PREVIOUS_RELEASE=$PREVIOUS_RELEASE"
 
           # Compare the fetched release tag with the previous release tag
-          if [ "${{ steps.get_release.outputs.RELEASE_TAG }}" != "$PREVIOUS_RELEASE" ]; then
-            echo "release_changed=true" >> $GITHUB_OUTPUT
-            echo "Release changed: true"
+          if [ "${{ env.RELEASE_TAG }}" != "$PREVIOUS_RELEASE" ]; then
+            echo "RELEASE_CHANGED=true" | tee -a $GITHUB_ENV
           else
-            echo "release_changed=false" >> $GITHUB_OUTPUT
-            echo "Release changed: false"
+            echo "RELEASE_CHANGED=false" | tee -a $GITHUB_ENV
           fi
 
       - name: Call workflow to build docker image
-        if: steps.compare_release.outputs.release_changed == 'true'
+        if: env.RELEASE_CHANGED == 'true'
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: publish.yml
