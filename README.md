@@ -93,18 +93,16 @@ $ docker buildx create --config buildkitd.toml --name no_concurrency
 $ QBITTORRENT_TAG={TAG} docker buildx bake -f bake.yml --builder no_concurrency
 ```
 
-# Docker Images
+# Image Tags
 
 | Tag | Description |
 |----------|----------|
-| `trigus42/qbittorrentvpn` | The latest image with the then latest version of qBittorrent |
-| `ghcr.io/trigus42/alpine-qbittorrentvpn:master` | The latest image from the master branch <br /> Built every day with the latest version of qBittorrent by [GitHub Actions](https://github.com/Trigus42/alpine-qbittorrentvpn/actions/workflows/docker-publish.yml) |
-| `trigus42/qbittorrentvpn:qbtx.x.x` | Image with version x.x.x of qBittorrent |
-| `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image build on YYYYMMDD with version x.x.x of qBittorrent |
-
-The images of the development branch use the same naming sceme except that `dev-` is added in front.  
-For example: `trigus42/qbittorrentvpn:dev-qbtx.x.x-YYYYMMDD`  
-Testing and feedback is appreciated.
+| `trigus42/qbittorrentvpn:latest` | The latest image with the most recent version of qBittorrent |
+| `trigus42/qbittorrentvpn:qbtx.x.x` | Image with qBittorrent version x.x.x |
+| `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image built on YYYYMMDD with qBittorrent version x.x.x |
+| `trigus42/qbittorrentvpn:COMMIT-HASH` | Image built from the commit with corresponding SHA hash |
+| `trigus42/qbittorrentvpn:COMMIT-HASH-qbtx.x.x` | Image built from the commit with corresponding SHA hash and qBittorrent version x.x.x |
+| `trigus42/qbittorrentvpn:BRANCH` | Image build from the corresponding branch |
 
 # Environment Variables
 | Variable | Function | Example | Default |
