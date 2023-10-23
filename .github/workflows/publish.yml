@@ -82,7 +82,8 @@ jobs:
 
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push Docker image
-        id: build-and-push
+        if: github.ref_name == 'master'
+        id: build-and-push-master
         uses: docker/build-push-action@v4.0.0
         with:
           context: .
@@ -101,6 +102,24 @@ jobs:
             trigus42/qbittorrentvpn:qbt${{ env.VERSION_NUMBER }}
             trigus42/qbittorrentvpn:${{ github.sha }}-qbt${{ env.VERSION_NUMBER }}
             trigus42/qbittorrentvpn:qbt${{ env.VERSION_NUMBER }}-${{ env.DATE }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      - name: Build and push Docker image
+        if: github.ref_name != 'master'
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}
+            ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+            trigus42/qbittorrentvpn:${{ github.head_ref || github.ref_name }}
+            trigus42/qbittorrentvpn:${{ github.head_ref || github.ref_name }}-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
