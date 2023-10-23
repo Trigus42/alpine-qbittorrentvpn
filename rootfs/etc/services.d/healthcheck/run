@@ -27,28 +27,40 @@ done
 qbittorrentpid=$(pgrep -o qbittorrent-nox)
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] qBittorrent started with PID $qbittorrentpid"
 
-# Set some variables that are used
-HOST=${HEALTH_CHECK_HOST}
-DEFAULT_HOST="one.one.one.one"
-INTERVAL=${HEALTH_CHECK_INTERVAL}
-DEFAULT_INTERVAL=5
 
-# If host is zero (not set) default it to the DEFAULT_HOST variable
+## Setup
+
+# Set some variables that are used
+DEFAULT_HOST="one.one.one.one"
+DEFAULT_INTERVAL=5
+DEFAULT_TIMEOUT=5
+
+
+# If HOST is zero (not set) use DEFAULT_HOST
 if [[ -z "${HOST}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_HOST is not set. Using default host ${DEFAULT_HOST}"
     HOST=${DEFAULT_HOST}
 fi
 
-# If HEALTH_CHECK_INTERVAL is zero (not set) default it to DEFAULT_INTERVAL
+# If HEALTH_CHECK_INTERVAL is zero (not set) use DEFAULT_INTERVAL
 if [[ -z "${HEALTH_CHECK_INTERVAL}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_INTERVAL is not set. Using default interval of ${DEFAULT_INTERVAL}s"
-    INTERVAL=${DEFAULT_INTERVAL}
+    HEALTH_CHECK_INTERVAL=${DEFAULT_INTERVAL}
 fi
+
+# If HEALTH_CHECK_TIMEOUT is zero (not set) use DEFAULT_TIMEOUT
+if [[ -z "${HEALTH_CHECK_TIMEOUT}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_TIMEOUT is not set. Using default interval of ${DEFAULT_TIMEOUT}s"
+    HEALTH_CHECK_TIMEOUT=${DEFAULT_TIMEOUT}
+fi
+
+
+## Run
 
 while :; do
     if [[ $VPN_ENABLED != "no" ]]; then
         # Check if it is possible to bypass the VPN
-        if (ping -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
+        if (ping -I "$DOCKER_INTERFACE" -c 1 "$HOST" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
             echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
             print_exit_info
             exit 1
@@ -56,15 +68,21 @@ while :; do
     fi
 
     # Check if HEALTH_CHECK_HOST is reachable
+    start_time=$(date +%s)
     if ! (ping -c 1 $HOST > /dev/null 2>&1); then
-        # Wait 3 seconds for connection to recover
-        sleep 3
-        if ! (ping -c 1 $HOST > /dev/null 2>&1); then
-            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
-            print_exit_info
-            exit 1
-        fi
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [NOTICE] Network seems to be down. Retrying.."
+        while :; do
+            if [[ "$(date +%s) - $start_time" -lt $HEALTH_CHECK_TIMEOUT ]]; then
+                if (ping -c 1 $HOST > /dev/null 2>&1); then
+                    echo "$(date +'%Y-%m-%d %H:%M:%S') [NOTICE] Network connection restored"
+                    break
+                fi
+            else
+                echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
+                exit 1
+            fi
+        done
     fi
 
-    sleep ${INTERVAL}
+    sleep ${HEALTH_CHECK_INTERVAL}
 done
