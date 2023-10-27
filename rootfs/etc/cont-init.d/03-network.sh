@@ -94,7 +94,8 @@ add_comment_rule "iptables -A INPUT -i $VPN_DEVICE_TYPE -m comment --comment \"A
 add_comment_rule "iptables -A INPUT -s $DOCKER_NETWORK_CIDR -d $DOCKER_NETWORK_CIDR -m comment --comment \"Accept input from internal Docker network\" -j ACCEPT"
 
 # Accept input to vpn gateway
-add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p $VPN_PROTOCOL --sport $VPN_PORT -s $VPN_REMOTE -m comment --comment \"Accept input of VPN gateway\" -j ACCEPT"
+#add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p $VPN_PROTOCOL --sport $VPN_PORT -s $VPN_REMOTE -m comment --comment \"Accept input of VPN gateway\" -j ACCEPT"
+add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p $VPN_PROTOCOL --sport $VPN_PORT -m comment --comment \"Accept input of VPN gateway\" -j ACCEPT"
 
 # Accept input to qBittorrent webui port
 add_comment_rule "iptables -A INPUT -i $DOCKER_INTERFACE -p tcp --dport 8080 -m comment --comment \"Accept input to qBittorrent webui port\" -j ACCEPT"
@@ -129,7 +130,8 @@ add_comment_rule "iptables -A OUTPUT -o $VPN_DEVICE_TYPE -m comment --comment \"
 add_comment_rule "iptables -A OUTPUT -s $DOCKER_NETWORK_CIDR -d $DOCKER_NETWORK_CIDR -m comment --comment \"Accept output to internal Docker network\" -j ACCEPT"
 
 # Accept output from vpn gateway
-add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p $VPN_PROTOCOL --dport $VPN_PORT -d $VPN_REMOTE -m comment --comment \"Accept output of VPN gateway\" -j ACCEPT"
+#add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p $VPN_PROTOCOL --dport $VPN_PORT -d $VPN_REMOTE -m comment --comment \"Accept output of VPN gateway\" -j ACCEPT"
+add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p $VPN_PROTOCOL --dport $VPN_PORT -m comment --comment \"Accept output of VPN gateway\" -j ACCEPT"
 
 # Accept output from qBittorrent webui port - used for lan access
 add_comment_rule "iptables -A OUTPUT -o $DOCKER_INTERFACE -p tcp --sport 8080 -m comment --comment \"Accept output from qBittorrent webui port\" -j ACCEPT"
