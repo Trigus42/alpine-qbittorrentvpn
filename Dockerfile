@@ -12,7 +12,7 @@ RUN \
         dos2unix \
         grep \
         ipcalc \
-        iptables \
+        nftables \
         iputils \
         net-tools \
         openresolv \

@@ -140,7 +140,7 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
             export VPN_PROTOCOL="udp"
         fi
     fi
-    # Required for use in iptables
+    # Required for use in firewall rules
     if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
         export VPN_PROTOCOL="tcp"
     fi
