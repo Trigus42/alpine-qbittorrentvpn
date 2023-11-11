@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.18
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
@@ -14,7 +14,6 @@ RUN \
         ipcalc \
         iptables \
         iputils \
-        libexecinfo \
         net-tools \
         openresolv \
         openssl \
