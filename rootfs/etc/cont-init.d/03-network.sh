@@ -63,21 +63,54 @@ fi
 ##########
 # nft rules
 
-# Add inet table
-nft add table inet filter
+# Add firewall table
+nft add table inet firewall
+
+
+## VPN_REMOTE IPs
+
+# VPN_REMOTE is already an IPv4 address
+if [[ $VPN_REMOTE =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	ipv4_addresses=("$VPN_REMOTE")
+	ipv6_addresses=()
+# VPN_REMOTE is already an IPv6 address
+elif [[ $VPN_REMOTE =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then
+	ipv4_addresses=()
+	ipv6_addresses=("$VPN_REMOTE")
+# VPN_REMOTE is a hostname
+else
+	# Get a list of the IPv4 and IPv6 addresses
+	ipv4_addresses=$(dig +short A $VPN_REMOTE)
+	ipv6_addresses=$(dig +short AAAA $VPN_REMOTE)
+fi
+
+# Create the sets for storing the IPv4 and IPv6 addresses
+nft add set inet firewall vpn_ipv4 { type ipv4_addr \; }
+nft add set inet firewall vpn_ipv6 { type ipv6_addr \; }
+
+# Add each IP address to its respective set
+for address in $ipv4_addresses; do
+  nft add element inet firewall vpn_ipv4 { $address }
+done
+
+for address in $ipv6_addresses; do
+  nft add element inet firewall vpn_ipv6 { $address }
+done
+
 
 # Add chains to the table
-nft add chain inet filter input { type filter hook input priority 0 \;  policy drop \; }
-nft add chain inet filter output { type filter hook output priority 0 \;  policy drop \; }
+nft add chain inet firewall input { type filter hook input priority 0 \; policy drop \; }
+nft add chain inet firewall output { type filter hook output priority 0 \; policy drop \; }
 
 
 ## Input
 
-nft add rule inet filter input iifname $VPN_DEVICE_TYPE accept comment \"Accept input from tunnel adapter\"
-nft add rule inet filter input ip saddr $DOCKER_NETWORK_CIDR ip daddr $DOCKER_NETWORK_CIDR accept comment \"Accept input from internal Docker network\"
-nft add rule inet filter input iifname $DOCKER_INTERFACE ip protocol $VPN_PROTOCOL sport $VPN_PORT ip saddr $VPN_REMOTE accept comment \"Accept input of VPN gateway\"
-nft add rule inet filter input iifname $DOCKER_INTERFACE tcp dport 8080 accept comment \"Accept input to qBittorrent webui port\"
-nft add rule inet filter input iifname lo accept comment \"Accept input to internal loopback\"
+nft add rule inet firewall input iifname $VPN_DEVICE_TYPE accept comment \"Accept input from tunnel adapter\"
+nft add rule inet firewall input ip saddr $DOCKER_NETWORK_CIDR ip daddr $DOCKER_NETWORK_CIDR accept comment \"Accept input from internal Docker network\"
+nft add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip saddr @vpn_ipv4 accept comment \"Accept input of VPN gateway \(IPv4\)\"
+nft add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip6 saddr @vpn_ipv6 accept comment \"Accept input of VPN gateway \(IPv6\)\"
+nft add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 accept comment \"Accept input to qBittorrent webui port\"
+nft add rule inet firewall input iifname lo accept comment \"Accept input to internal loopback\"
 
 # Additional port list for scripts or container linking
 if [[ -n "$ADDITIONAL_PORTS" ]]; then
@@ -86,18 +119,19 @@ if [[ -n "$ADDITIONAL_PORTS" ]]; then
 	for additional_port_item in "${additional_port_list[@]}"; do
 		additional_port_item=$(echo "$additional_port_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional incoming port $additional_port_item for $DOCKER_INTERFACE"
-		nft add rule inet filter input iifname $DOCKER_INTERFACE tcp dport $additional_port_item accept comment \"Accept input to additional port\"
+		nft add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport $additional_port_item accept comment \"Accept input to additional port\"
 	done
 fi
 
 
 ## Output
 
-nft add rule inet filter output oifname $VPN_DEVICE_TYPE accept comment \"Accept output to tunnel adapter\"
-nft add rule inet filter output ip saddr $DOCKER_NETWORK_CIDR ip daddr $DOCKER_NETWORK_CIDR accept comment \"Accept output to internal Docker network\"
-nft add rule inet filter output oifname $DOCKER_INTERFACE ip protocol $VPN_PROTOCOL dport $VPN_PORT ip daddr $VPN_REMOTE accept comment \"Accept output of VPN gateway\"
-nft add rule inet filter output oifname $DOCKER_INTERFACE tcp sport 8080 accept comment \"Accept output from qBittorrent webui port\"
-nft add rule inet filter output iifname lo accept comment \"Accept output to internal loopback\"
+nft add rule inet firewall output oifname $VPN_DEVICE_TYPE accept comment \"Accept output to tunnel adapter\"
+nft add rule inet firewall output ip saddr $DOCKER_NETWORK_CIDR ip daddr $DOCKER_NETWORK_CIDR accept comment \"Accept output to internal Docker network\"
+nft add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip daddr @vpn_ipv4 accept comment \"Accept output of VPN gateway \(IPv4\)\"
+nft add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip6 daddr @vpn_ipv6 accept comment \"Accept output of VPN gateway \(IPv6\)\"
+nft add rule inet firewall output oifname $DOCKER_INTERFACE tcp sport 8080 accept comment \"Accept output from qBittorrent webui port\"
+nft add rule inet firewall output iifname lo accept comment \"Accept output to internal loopback\"
 
 # Additional port list for scripts or container linking
 if [[ -n "$ADDITIONAL_PORTS" ]]; then
@@ -106,7 +140,7 @@ if [[ -n "$ADDITIONAL_PORTS" ]]; then
 	for additional_port_item in "${additional_port_list[@]}"; do
 		additional_port_item=$(echo "$additional_port_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional outgoing port $additional_port_item for $DOCKER_INTERFACE"
-		nft add rule inet filter output oifname $DOCKER_INTERFACE tcp sport $additional_port_item accept comment \"Accept output from additional port\"
+		nft add rule inet firewall output oifname $DOCKER_INTERFACE tcp sport $additional_port_item accept comment \"Accept output from additional port\"
 	done
 fi
 

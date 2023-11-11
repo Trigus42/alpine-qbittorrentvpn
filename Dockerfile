@@ -9,12 +9,13 @@ RUN \
     # Install tools
     apk add --no-cache \
         bash \
+        bind-tools \
         dos2unix \
         grep \
         ipcalc \
-        nftables \
         iputils \
         net-tools \
+        nftables \
         openresolv \
         openssl \
         openvpn \
