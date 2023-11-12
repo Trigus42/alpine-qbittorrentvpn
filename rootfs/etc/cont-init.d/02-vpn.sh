@@ -151,7 +151,7 @@ fi
 
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    VPN_DEVICE_TYPE=$( awk '/dev/ {print $2}' < "${VPN_CONFIG}")
+    VPN_DEVICE_TYPE=$( grep -P -o -m 1 '(?<=^dev\s)[^\s0-9]+' < "${VPN_CONFIG}")
     if [[ -n "${VPN_DEVICE_TYPE}" ]]; then
         export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
