@@ -18,11 +18,12 @@ RUN \
         openresolv \
         openssl \
         openvpn \
+        procps \
         qt5-qtbase \
+        sed \
         tzdata \
         wget \
-        wireguard-tools \
-        procps
+        wireguard-tools
 
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
 ARG S6_OVERLAY_TAG="v2.2.0.3"

@@ -60,11 +60,12 @@ RUN \
         openresolv \
         openssl \
         openvpn \
+        procps \
         qt5-qtbase \
+        sed \
         tzdata \
         wget \
-        wireguard-tools \
-        procps && \
+        wireguard-tools && \
     # Install s6-overlay
     wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz && \
     tar -xf /tmp/s6_overlay.tar.gz -C / && \

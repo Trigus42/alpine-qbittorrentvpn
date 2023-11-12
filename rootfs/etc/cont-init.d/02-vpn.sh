@@ -174,8 +174,6 @@ if [[ "${VPN_TYPE}" == "wireguard" ]]; then
     if ! (sysctl -q net.ipv4.conf.all.src_valid_mark=1 >/dev/null 2>&1); then
         # Check if net.ipv4.conf.all.src_valid_mark is already set to 1
         if [ "$(sysctl net.ipv4.conf.all.src_valid_mark)" == "net.ipv4.conf.all.src_valid_mark = 1" ]; then
-            # Update sed
-            apk add --no-cache --quiet sed
             # Modify wg-quick to run in unprivileged container
             sed -i -E 's/&& cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' "$(command -v wg-quick)"
         else
@@ -197,28 +195,29 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			mknod /dev/net/tun c 10 200
 		fi
 
-		cd /config/openvpn
-
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
         echo "--------------------"
 
         # Check if credential file exists and is not empty
         if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-            sh -c 'echo $$ > /tmp/openvpn_pid; exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect' &
+            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
         else
-            sh -c 'echo $$ > /tmp/openvpn_pid; exec openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect' &
+            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --up /helper/resume-after-connect &
         fi
 
-        while [[ ! -f /tmp/openvpn_pid ]]; do
-            sleep 0.1
-        done
+        # Capture the PID of the background OpenVPN process
+        openvpn_pid=$!
 
-        openvpn_pid="$(cat /tmp/openvpn_pid)"
+        if [[ "$DEBUG" == "yes" ]]; then
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] OpenVPN PID: $openvpn_pid"
+        fi
 
         # Wait for startup
         while :; do
             # Process exited
             if ! ps -p $openvpn_pid > /dev/null; then
+                echo "--------------------"
+                echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Failed to start OpenVPN"
                 exit 1
             # Startup was successfull
             elif [[ -f /tmp/openvpn_startup_finished ]]; then
@@ -231,11 +230,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		echo "--------------------"
-		cd /config/wireguard
-		if iplink | grep "$(basename "$VPN_CONFIG" .conf)"; then
-			wg-quick down "$VPN_CONFIG" || echo "WireGuard is down already" # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
-			sleep 0.5 # Just to give WireGuard a bit to go down
-		fi
 		wg-quick up "$VPN_CONFIG"
 		echo "--------------------"
 	fi
