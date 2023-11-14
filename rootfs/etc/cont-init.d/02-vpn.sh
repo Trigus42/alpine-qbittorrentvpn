@@ -198,12 +198,18 @@ if [[ $VPN_ENABLED == "yes" ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
         echo "--------------------"
 
+        # Allow to specify relative positions for additional files (like ca, cert, key, ...)
+        pushd /config/openvpn/ > /dev/null
+
         # Check if credential file exists and is not empty
         if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
             openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
         else
             openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
         fi
+
+        # Revert to previous directory
+        popd > /dev/null
 
         # Capture the PID of the background OpenVPN process
         openvpn_pid=$!
