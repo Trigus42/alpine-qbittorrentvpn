@@ -82,7 +82,7 @@ jobs:
 
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push Docker image
-        if: github.ref_name == 'master'
+        if: github.event_name != 'pull_request' && github.ref_name == 'master'
         id: build-and-push-master
         uses: docker/build-push-action@v4.0.0
         with:
@@ -141,14 +141,14 @@ jobs:
 
       # For use in check_update workflow
       - name: Store artifacts
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref_name == 'master'
         run: |
           # Store the newly fetched release version in a file
           echo "${{ env.RELEASE_TAG }}" > qbt-release-info
           echo "Saved ${{ env.RELEASE_TAG }} to qbt-release-info"
 
       - name: Upload new artifacts
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref_name == 'master'
         uses: actions/upload-artifact@v3
         with:
           name: qbt-release-info
