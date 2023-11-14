@@ -151,16 +151,21 @@ fi
 
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    VPN_DEVICE_TYPE=$( grep -P -o -m 1 '(?<=^dev\s)[^\s0-9]+' < "${VPN_CONFIG}")
-    if [[ -n "${VPN_DEVICE_TYPE}" ]]; then
-        export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
-    else
+    VPN_DEVICE_TYPE=$( grep -P -o -m 1 '(?<=^dev\s)[^\s]+' < "${VPN_CONFIG}")
+
+    if [[ -z "${VPN_DEVICE_TYPE}" ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}, exiting..."
         # Sleep so it wont 'spam restart'
         sleep 5
         exit 1
     fi
+
+    # If device name has no number, append 0
+    if [[ ! "${VPN_DEVICE_TYPE}" =~ ^.*[0-9]$ ]]; then
+        export VPN_DEVICE_TYPE="${VPN_DEVICE_TYPE}0"
+    fi
+    
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'"
 else
     export VPN_DEVICE_TYPE="$VPN_CONFIG_NAME"
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_DEVICE_TYPE set as '${VPN_DEVICE_TYPE}'"
