@@ -198,6 +198,9 @@ if [[ $VPN_ENABLED == "yes" ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
         echo "--------------------"
 
+        # Delete if file persisted between reboots
+        if [ -f /tmp/openvpn_startup_finished ]; then rm /tmp/openvpn_startup_finished; fi
+
         # Allow to specify relative positions for additional files (like ca, cert, key, ...)
         pushd /config/openvpn/ > /dev/null
 
