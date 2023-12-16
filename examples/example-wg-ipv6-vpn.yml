@@ -5,14 +5,11 @@ services:
     image: trigus42/qbittorrentvpn
     container_name: qbittorrent
     environment:
-      - VPN_ENABLED=yes
       - VPN_TYPE=wireguard
-      - LAN_NETWORK=192.168.0.0/24
     volumes:
       - './config/:/config'
     ports:
      - 80:8080
-     - 443:8080
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
