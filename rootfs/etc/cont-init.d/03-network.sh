@@ -24,10 +24,8 @@ for lan_network_item in "${lan_network_list[@]}"; do
 
 	ip_route_add_exit_code=$?
 
-	if [[ $ip_route_add_exit_code != 0 && $SET_FWMARK == "yes" ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Error adding route for $lan_network_item. The web interface will still be reachable due to fwmark. However this is known to cause issues."
-	elif [[ $ip_route_add_exit_code != 0 ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Error adding route for $lan_network_item. The web interface won't be reachable for the affected network"
+	if [[ $ip_route_add_exit_code != 0 ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Error adding route for $lan_network_item."
 	fi
 done
 

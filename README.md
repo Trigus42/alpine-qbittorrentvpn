@@ -89,7 +89,6 @@ docker compose up -d
 |`NAME_SERVERS`| Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID to be applied to /config files and /downloads  |`PGID=100`|`1000`|
 |`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`PUID=99`|`1000`|
-|`SET_FWMARK`| Make web interface reachable for devices in networks not specified in `LAN_NETWORK` |`yes`|`no`|
 |`TZ`| Specify a timezone to use |`TZ=Europe/London`|`UTC`|
 |`UMASK`| Set file mode creation mask |`UMASK=002`|`002`|
 |`VPN_ENABLED`| Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
