@@ -36,28 +36,41 @@ if [[ "${DEBUG}" == "yes" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker interface defined as ${DOCKER_INTERFACE}"
 fi
 
-# Identify ip of docker bridge interface
-docker_ip="$(ip -4 addr show "${DOCKER_INTERFACE}" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')"
+# Identify IPv4 address of docker bridge interface
+docker_ipv4_cidr="$(ip -4 addr show dev "${DOCKER_INTERFACE}" | grep -oP '(?<=inet\s)\d+(\.\d+){3}\/\d+')"
+docker_ipv4="$(grep -oP '^[^\/]+' <<< "${docker_ipv4_cidr}")"
 if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IP defined as ${docker_ip}"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker IPv4 address defined as ${docker_ipv4}"
 fi
 
-# Identify netmask of docker bridge interface
-docker_mask=$(ifconfig "${DOCKER_INTERFACE}" | grep -o "Mask:[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
+# Identify link-local IPv6 address of docker bridge interface
+docker_ipv6_ula_cidr="$(ip -6 addr show dev "${DOCKER_INTERFACE}" | grep -oP '(?<=inet6\s)fd[0-9a-f:]+\/[0-9]+')"
+docker_ipv6_ula="$(grep -oP '^[^\/]+' <<< "${docker_ipv6_ula_cidr}")"
 if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker netmask defined as ${docker_mask}"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Docker unique-local IPv6 address defined as ${docker_ipv6_ula}"
 fi
 
-# Convert netmask into CIDR format
-DOCKER_NETWORK_CIDR=$(ipcalc "${docker_ip}" "${docker_mask}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Docker network defined as ${DOCKER_NETWORK_CIDR}"
-
-# Get default gateway of interfaces as looping through them
-DEFAULT_GATEWAY=$(ip -4 route list 0/0 | cut -d ' ' -f 3)
+DOCKER_IPV4_NETWORK_CIDR=$(ipcalc "${docker_ipv4_cidr}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+" | sed -e 's/\s//g')
 if [[ "${DEBUG}" == "yes" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Default gateway defined as ${DEFAULT_GATEWAY}"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Docker IPv4 network defined as ${DOCKER_IPV4_NETWORK_CIDR}"
 fi
 
+DOCKER_IPV6_ULA_NETWORK_CIDR=$(ipcalc "${docker_ipv6_ula_cidr}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+" | sed -e 's/\s//g')
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Docker IPv6 network defined as ${DOCKER_IPV6_ULA_NETWORK_CIDR}"
+fi
+
+# Get default IPv4 gateway
+DEFAULT_IPV4_GATEWAY=$(ip -4 route list 0/0 | cut -d ' ' -f 3 | head -n 1)
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Default IPv4 gateway defined as ${DEFAULT_IPV4_GATEWAY}"
+fi
+
+# Get default IPv6 gateway
+DEFAULT_IPV6_GATEWAY=$(ip -6 route list ::0/0 | cut -d ' ' -f 3 | head -n 1)
+if [[ "${DEBUG}" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Default IPv6 gateway defined as ${DEFAULT_IPV6_GATEWAY}"
+fi
 
 ##########
 # PUID/PGID
@@ -98,7 +111,10 @@ export VPN_ENABLED
 if [[ -n "${VPN_ENABLED}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_ENABLED defined as '${VPN_ENABLED}'"
 else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] VPN_ENABLED not defined (via -e VPN_ENABLED), defaulting to 'yes'"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_ENABLED not defined (via -e VPN_ENABLED), defaulting to 'yes'"
+fi
+
+if [[ $VPN_ENABLED != "no" ]]; then
 	export VPN_ENABLED="yes"
 fi
 
@@ -147,7 +163,7 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("LAN_NETWORK" "DOCKER_INTERFACE" "DOCKER_NETWORK_CIDR" "DEFAULT_GATEWAY" "PUID" "PGID" "VPN_TYPE")
+export_vars=("LAN_NETWORK" "DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"

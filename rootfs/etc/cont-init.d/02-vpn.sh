@@ -187,7 +187,7 @@ fi
 # Exit if any of the following commands fails
 set -e
 
-if [[ $VPN_ENABLED == "yes" ]]; then
+if [[ $VPN_ENABLED != "no" ]]; then
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
 		mkdir -p /dev/net
