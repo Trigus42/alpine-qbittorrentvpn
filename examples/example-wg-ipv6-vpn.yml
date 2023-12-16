@@ -2,7 +2,6 @@ version: "3.3"
 
 services:
   qbittorrent:
-    # build: ./
     image: trigus42/qbittorrentvpn
     container_name: qbittorrent
     environment:
@@ -20,3 +19,4 @@ services:
       - SYS_MODULE
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
