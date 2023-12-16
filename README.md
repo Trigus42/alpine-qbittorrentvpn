@@ -85,7 +85,6 @@ docker compose up -d
 |`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=8.8.8.8`|`1.1.1.1`|
 |`HEALTH_CHECK_INTERVAL`| Time in seconds that the container waits to see if the VPN and internet connection still work |`HEALTH_CHECK_INTERVAL=5`|`5`|
 |`HEALTH_CHECK_TIMEOUT`| How long to wait for the internet connection to restore before restarting |`HEALTH_CHECK_INTERVAL=5`|`5`|
-|`INSTALL_PYTHON3`| Set this to `yes` to let the container install Python3 |`INSTALL_PYTHON3=yes`|`no`|
 |`LAN_NETWORK`| Comma delimited local networks with CIDR notation |`LAN_NETWORK=192.168.0.0/16,192.168.178.0/24`||
 |`NAME_SERVERS`| Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID to be applied to /config files and /downloads  |`PGID=100`|`1000`|
