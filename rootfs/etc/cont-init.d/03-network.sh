@@ -33,7 +33,7 @@ done
 ##########
 # nft rules
 
-# Mark outgoing packets belonging to a WebUI connection
+# Mark outgoing packets belonging to a WebUI connection (for routing and firewall)
 nft "add table inet qbt-mark"
 nft "add chain inet qbt-mark prerouting { type filter hook prerouting priority -150 ; }"
 nft "add chain inet qbt-mark output { type route hook output priority -150 ; }"
@@ -64,8 +64,8 @@ elif [[ $VPN_REMOTE =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then
 # VPN_REMOTE is a hostname
 else
 	# Get a list of the IPv4 and IPv6 addresses
-	ipv4_addresses=("$(dig +short A $VPN_REMOTE)")
-	ipv6_addresses=("$(dig +short AAAA $VPN_REMOTE)")
+	mapfile -t ipv4_addresses < <(dig +short A $VPN_REMOTE)
+	mapfile -t ipv6_addresses < <(dig +short AAAA $VPN_REMOTE)
 fi
 
 # Create the sets for storing the IPv4 and IPv6 addresses
@@ -74,11 +74,12 @@ nft "add set inet firewall vpn_ipv6 { type ipv6_addr ; }"
 
 # Add each IP address to its respective set
 for address in "${ipv4_addresses[@]}"; do
-  nft "add element inet firewall vpn_ipv4 { $address }"
+	nft "add element inet firewall vpn_ipv4 { $address }"
 done
 
 for address in "${ipv6_addresses[@]}"; do
-  nft "add element inet firewall vpn_ipv6 { $address }"
+	echo "$address"
+	nft "add element inet firewall vpn_ipv6 { $address }"
 done
 
 
