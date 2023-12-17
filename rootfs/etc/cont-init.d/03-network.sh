@@ -42,10 +42,14 @@ nft "add rule inet qbt-mark output ct mark 9090 meta mark set 8080 counter comme
 
 # Route WebUI traffic over "$DEFAULT_IPV4_GATEWAY"
 echo "8080    webui" >> /etc/iproute2/rt_tables
-ip rule add fwmark 8080 table webui
-ip route add default via "$DEFAULT_IPV4_GATEWAY" table webui
-ip -6 rule add fwmark 8080 table webui
-ip -6 route add default via "$DEFAULT_IPV6_GATEWAY" eth0 table webui
+if [ -n "$DEFAULT_IPV4_GATEWAY" ]; then
+	ip rule add fwmark 8080 table webui
+	ip route add default via "$DEFAULT_IPV4_GATEWAY" table webui
+fi
+if [ -n "$DEFAULT_IPV6_GATEWAY" ]; then
+	ip -6 rule add fwmark 8080 table webui
+	ip -6 route add default via "$DEFAULT_IPV6_GATEWAY" eth0 table webui
+fi
 
 # Add firewall table
 nft add table inet firewall
@@ -78,7 +82,6 @@ for address in "${ipv4_addresses[@]}"; do
 done
 
 for address in "${ipv6_addresses[@]}"; do
-	echo "$address"
 	nft "add element inet firewall vpn_ipv6 { $address }"
 done
 
