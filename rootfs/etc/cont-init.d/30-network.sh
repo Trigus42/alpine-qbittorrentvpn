@@ -19,7 +19,8 @@ nft "add rule inet qbt-mark prerouting iif eth0 tcp dport 8080 ct state new ct m
 nft "add rule inet qbt-mark output ct mark 9090 meta mark set 8080 counter comment \"Add mark to outgoing packets belonging to a WebUI connection\""
 
 # Route WebUI traffic over "$DEFAULT_IPV4_GATEWAY"
-echo "8080    webui" >> /etc/iproute2/rt_tables
+mkdir -p /etc/iproute2/
+echo "8080 webui" >> /etc/iproute2/rt_tables
 if [ -n "$DEFAULT_IPV4_GATEWAY" ]; then
 	ip rule add fwmark 8080 table webui
 	ip route add default via "$DEFAULT_IPV4_GATEWAY" table webui
