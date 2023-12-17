@@ -9,28 +9,6 @@ if [[ $VPN_ENABLED == "no" ]]; then
 fi
 
 ##########
-# Packet routing
-
-# Split comma separated string into list from LAN_NETWORK env variable
-IFS=',' read -ra lan_network_list <<< "$LAN_NETWORK"
-
-# Process lan networks in the list
-for lan_network_item in "${lan_network_list[@]}"; do
-	# Strip whitespace from start and end of lan_network_item
-	lan_network_item=$(echo "$lan_network_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding $lan_network_item as route via docker $DOCKER_INTERFACE" 
-	ip route add "$lan_network_item" via "$DEFAULT_IPV4_GATEWAY" dev "$DOCKER_INTERFACE" &> /dev/null
-
-	ip_route_add_exit_code=$?
-
-	if [[ $ip_route_add_exit_code != 0 ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Error adding route for $lan_network_item."
-	fi
-done
-
-
-##########
 # nft rules
 
 # Mark outgoing packets belonging to a WebUI connection (for routing and firewall)
@@ -54,22 +32,21 @@ fi
 # Add firewall table
 nft add table inet firewall
 
-
 ## VPN_REMOTE IPs
 
 # VPN_REMOTE is already an IPv4 address
-if [[ $VPN_REMOTE =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+if ipcalc -c -4 "$VPN_REMOTE"; then
 	ipv4_addresses=("$VPN_REMOTE")
 	ipv6_addresses=()
 # VPN_REMOTE is already an IPv6 address
-elif [[ $VPN_REMOTE =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]]; then
+elif ipcalc -c -6 "$VPN_REMOTE"; then
 	ipv4_addresses=()
 	ipv6_addresses=("$VPN_REMOTE")
 # VPN_REMOTE is a hostname
 else
 	# Get a list of the IPv4 and IPv6 addresses
-	mapfile -t ipv4_addresses < <(dig +short A $VPN_REMOTE)
-	mapfile -t ipv6_addresses < <(dig +short AAAA $VPN_REMOTE)
+	IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
+	IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
 fi
 
 # Create the sets for storing the IPv4 and IPv6 addresses
@@ -96,8 +73,37 @@ nft "add chain inet firewall output { type filter hook postrouting priority 0 ; 
 nft "add rule inet firewall input iifname $VPN_DEVICE_TYPE accept comment \"Accept input from VPN tunnel\""
 nft "add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip saddr @vpn_ipv4 accept comment \"Accept input from VPN server \(IPv4\)\""
 nft "add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip6 saddr @vpn_ipv6 accept comment \"Accept input from VPN server \(IPv6\)\""
-nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 counter accept comment \"Accept input to the qBt WebUI\""
 nft "add rule inet firewall input iifname lo accept comment \"Accept input from internal loopback\""
+
+# Support deprecated LAN_NETWORK env var
+if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
+	WEBUI_ALLOWED_NETWORKS=$LAN_NETWORK
+fi
+
+# Input to WebUI
+if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
+	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 counter accept comment \"Accept input to the qBt WebUI\""
+else
+	nft "add set inet firewall webui_allowed_networks_ipv4 { type ipv4_addr; flags interval ; }"
+	nft "add set inet firewall webui_allowed_networks_ipv6 { type ipv6_addr; flags interval ; }"
+
+	# Split comma separated string into list from WEBUI_ALLOWED_NETWORKS env variable
+	IFS=',' read -ra allowed_networks_array <<< "$WEBUI_ALLOWED_NETWORKS"
+
+	for address in "${allowed_networks_array[@]}"; do
+		# Remove whitepaces (for ipcalc)
+		address="$(sed -e 's/\s//g' <<< "$address")"
+
+		if ipcalc -c -4 "$address"; then
+			nft "add element inet firewall webui_allowed_networks_ipv4 { $address }"
+		elif ipcalc -c -6 "$address"; then
+			nft "add element inet firewall webui_allowed_networks_ipv6 { $address }"
+		fi
+	done
+
+	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 ip saddr @webui_allowed_networks_ipv4 counter accept comment \"Accept input to the qBt WebUI \(IPv4\)\""
+	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 ip6 saddr @webui_allowed_networks_ipv6 counter accept comment \"Accept input to the qBt WebUI \(IPv6\)\""
+fi
 
 # Additional port list for scripts or container linking
 if [[ -n "$ADDITIONAL_PORTS" ]]; then
@@ -109,7 +115,6 @@ if [[ -n "$ADDITIONAL_PORTS" ]]; then
 		nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport $additional_port_item accept comment \"Accept input to additional port\""
 	done
 fi
-
 
 ## Output
 

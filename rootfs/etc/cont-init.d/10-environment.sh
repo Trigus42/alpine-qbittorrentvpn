@@ -16,15 +16,20 @@ if [[ -n "${check_network}" ]]; then
 fi
 
 ##########
-# LAN network
-
-LAN_NETWORK=$(echo "${LAN_NETWORK}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-export LAN_NETWORK
+# Deprecation warnings
 
 if [[ -n "${LAN_NETWORK}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LAN_NETWORK defined as '${LAN_NETWORK}'"
-else
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] LAN_NETWORK not defined (via -e LAN_NETWORK)"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] LAN_NETWORK is deprecated, might not work in future versions and is no longer needed. Obmit or use WEBUI_ALLOWED_NETWORKS to restrict access instead"
+fi
+if [[ -n "${ADDITIONAL_PORTS}" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ADDITIONAL_PORTS is deprecated and might not work in future versions. Add a custom firewall script instead"
+fi
+
+##########
+# WEBUI_ALLOWED_NETWORKS
+
+if [[ -n "${WEBUI_ALLOWED_NETWORKS}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WEBUI_ALLOWED_NETWORKS is defined as $WEBUI_ALLOWED_NETWORKS"
 fi
 
 ##########
@@ -180,7 +185,7 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("LAN_NETWORK" "DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE")
+export_vars=("DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"
