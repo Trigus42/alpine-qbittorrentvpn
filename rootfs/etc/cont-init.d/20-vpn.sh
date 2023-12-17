@@ -199,10 +199,18 @@ if [[ $VPN_ENABLED != "no" ]]; then
         echo "--------------------"
 
         # Check if credential file exists and is not empty
-        if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+        if [ "$(cat /sys/module/ipv6/parameters/disable)" == "0" ]; then
+            if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
+                openvpn --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            else
+                openvpn --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            fi
         else
-            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
+                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            else
+                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            fi
         fi
 
         # Capture the PID of the background OpenVPN process
