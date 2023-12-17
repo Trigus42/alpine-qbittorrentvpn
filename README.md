@@ -21,14 +21,20 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 
 # Run container:
 
+Create a docker compose file or modify one of the [example compose files](examples/compose) to your needs. Then start the container by running:
+
+```sh
+docker compose up -d
+```
+
+## CLI
+
 &NewLine;
 ```sh
 $ docker run --privileged -d \
              -v /your/config/path/:/config \
              -v /your/downloads/path/:/downloads \
-             -e "VPN_ENABLED=yes" \
              -e "VPN_TYPE=wireguard" \
-             -e "LAN_NETWORK=192.168.0.0/24" \
              -p 8080:8080 \
              --restart unless-stopped \
              trigus42/qbittorrentvpn
@@ -42,7 +48,6 @@ $ docker run --privileged -d \
 &NewLine;
 ```sh
 --cap-add=NET_ADMIN \
---cap-add=SYS_MODULE \
 --sysctl net.ipv4.conf.all.src_valid_mark=1 \
 ```
 
@@ -50,16 +55,6 @@ $ docker run --privileged -d \
 &NewLine;
 ```sh
 --cap-add=NET_ADMIN \
-```
-
-&NewLine;
-
-## Docker compose
-
-Create a docker compose file or modify one of the example compose files to your needs. Then start you container by running:
-
-```sh
-docker compose up -d
 ```
 
 &NewLine;
@@ -141,6 +136,12 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 ```sh
 id <username>
 ```
+
+# Customization
+Just mount your script to /etc/cont-init.d/ in the container. The execution order is determined by the number prefix. See [examples/scripts](examples/scripts) for examples.
+
+## Firewall
+To add custom firewall rules, you can use iptables or nftables. 
 
 # Build it yourself
 &NewLine;

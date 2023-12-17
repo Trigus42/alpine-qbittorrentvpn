@@ -51,12 +51,14 @@ RUN \
     apk update && \
     apk add --no-cache \
         bash \
+        bind-tools \
         dos2unix \
         grep \
         ipcalc \
-        nftables \
+        iptables \
         iputils \
         net-tools \
+        nftables \
         openresolv \
         openssl \
         openvpn \

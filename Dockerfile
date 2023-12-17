@@ -13,6 +13,7 @@ RUN \
         dos2unix \
         grep \
         ipcalc \
+        iptables \
         iputils \
         net-tools \
         nftables \
