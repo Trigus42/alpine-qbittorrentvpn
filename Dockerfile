@@ -23,8 +23,9 @@ RUN \
         qt5-qtbase \
         sed \
         tzdata \
-        wget \
-        wireguard-tools
+        wget; \
+    apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+        wireguard-go;
 
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
 ARG S6_OVERLAY_TAG="v2.2.0.3"
