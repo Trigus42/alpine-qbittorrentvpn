@@ -144,7 +144,10 @@ if [[ $VPN_ENABLED != "no" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_TYPE defined as '${VPN_TYPE}'"
 	fi
 elif [[ $VPN_ENABLED == "no" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] You have set the VPN to disabled, your connection will NOT be secure."
+	BIRed='\033[1;91m'
+	On_IGreen='\033[0;102m'
+	COLOR_RESET='\033[0m'
+	echo -e "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ${On_IGreen}${BIRed}You have set the VPN to disabled, your connection will NOT be secure.${COLOR_RESET}"
 fi
 
 ##########
