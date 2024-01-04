@@ -1,4 +1,6 @@
-FROM golang:1.21 as go-builder
+FROM alpine:3.19 as go-builder
+
+RUN apk add --no-cache go
 
 WORKDIR /app
 
@@ -54,8 +56,6 @@ ARG S6_OVERLAY_TAG="v2.2.0.3"
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
-COPY ./build /tmp/build
-
 RUN \
     # Install tools
     apk update && \
@@ -78,9 +78,12 @@ RUN \
         tzdata \
         wget; \
     apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-        wireguard-go; \
+        wireguard-go
+
+COPY ./build/build-scripts /tmp/build-scripts
+RUN \
     # Install s6-overlay
-    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz && \
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build-scripts/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz && \
     tar -xf /tmp/s6_overlay.tar.gz -C / && \
     rm -r /tmp/*
     
