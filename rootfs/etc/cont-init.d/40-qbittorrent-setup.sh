@@ -79,7 +79,7 @@ fi
 # Set WebUI password
 if [[ -n "${WEBUI_PASSWORD}" ]] && ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Setting WebUI password to WEBUI_PASSWORD"
-	salt="$(dd if=/dev/urandom bs=16 count=1 | base64)"
+	salt="$(dd if=/dev/urandom bs=16 count=1 status=none | base64)"
 	key="$(/helper/dwk "$WEBUI_PASSWORD" "$salt" | head -2 | tail -1)"
 	sed -i "/\[Preferences\]/a WebUI\\\Password_PBKDF2=\"@ByteArray($salt:$key)\"" "$qbt_config_path"
 elif ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
