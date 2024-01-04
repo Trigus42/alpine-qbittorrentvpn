@@ -75,20 +75,21 @@ $ docker run --privileged -d \
 |----------|----------|----------|----------|
 |`DEBUG`| Print information useful for debugging in log |`yes`|`no`|
 |`DOWNLOAD_DIR_CHOWN`| Whether or not to chown files in the `/downloads` directory to PUID and PGID |`no`|`yes`|
-|`ENABLE_SSL`| Let the container handle SSL (yes/no) |`ENABLE_SSL=yes`|`no`|
-|`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`HEALTH_CHECK_HOST=8.8.8.8`|`1.1.1.1`|
-|`HEALTH_CHECK_INTERVAL`| Time in seconds that the container waits to see if the VPN and internet connection still work |`HEALTH_CHECK_INTERVAL=5`|`5`|
-|`HEALTH_CHECK_TIMEOUT`| How long to wait for the internet connection to restore before restarting |`HEALTH_CHECK_INTERVAL=5`|`5`|
-|`NAME_SERVERS`| Comma delimited name servers |`NAME_SERVERS=1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
-|`PGID`| GID to be applied to /config files and /downloads  |`PGID=100`|`1000`|
-|`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`PUID=99`|`1000`|
-|`TZ`| Specify a timezone to use |`TZ=Europe/London`|`UTC`|
-|`UMASK`| Set file mode creation mask |`UMASK=002`|`002`|
-|`VPN_ENABLED`| Enable VPN (yes/no)?|`VPN_ENABLED=yes`|`yes`|
-|`VPN_PASSWORD`| If username and password provided, configures all ovpn files automatically |`VPN_PASSWORD=ac98df79ed7fb`||
-|`VPN_TYPE`| WireGuard or OpenVPN (wireguard/openvpn)?|`VPN_TYPE=openvpn`|`wireguard`|
-|`VPN_USERNAME`| If username and password provided, configures all ovpn files automatically |`VPN_USERNAME=ad8f64c02a2de`||
-|`ADDITIONAL_PORTS`| Comma delimited networks in CIDR notation. If set, only networks in this list can access the WebUI. |`WEBUI_ALLOWED_NETWORKS=192.168.0.0/16,fd5e:d5b:760a:4796::/64`||
+|`ENABLE_SSL`| Let the container handle SSL (yes/no) |`yes`|`no`| 
+|`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`8.8.8.8`|`1.1.1.1`|
+|`HEALTH_CHECK_INTERVAL`| Time in seconds that the container waits to see if the VPN and internet connection still work |`5`|`5`|
+|`HEALTH_CHECK_TIMEOUT`| How long to wait for the internet connection to restore before restarting |`5`|`5`|
+|`NAME_SERVERS`| Comma delimited name servers |`1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
+|`PGID`| GID to be applied to /config files and /downloads  |`99`|`1000`|
+|`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`99`|`1000`|
+|`TZ`| Specify a timezone to use |`Europe/London`|`UTC`|
+|`UMASK`| Set file mode creation mask |`002`|`002`|
+|`VPN_ENABLED`| Enable VPN (yes/no)?|`yes`|`yes`|
+|`VPN_PASSWORD`| If username and password provided, configures all ovpn files automatically |`ac98df79ed7fb`||
+|`VPN_TYPE`| WireGuard or OpenVPN (wireguard/openvpn)?|`openvpn`|`wireguard`|
+|`VPN_USERNAME`| If username and password provided, configures all ovpn files automatically |`ad8f64c02a2de`||
+|`WEBUI_ALLOWED_NETWORKS`| Comma delimited networks in CIDR notation. If set, only networks in this list can access the WebUI. |`192.168.0.0/16,fd5e:d5b:760a:4796::/64`||
+|`WEBUI_PASSWORD`| Set WebUI password if none is set (won't change it) |`mypassword`||
 
 ## Volumes
 | Volume | Required | Function | Example |
