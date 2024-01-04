@@ -15,19 +15,25 @@ fi
 nft "add table inet qbt-mark"
 nft "add chain inet qbt-mark prerouting { type filter hook prerouting priority -150 ; }"
 nft "add chain inet qbt-mark output { type route hook output priority -150 ; }"
-nft "add rule inet qbt-mark prerouting iif eth0 tcp dport 8080 ct state new ct mark set 9090 counter comment \"Track new WebUI connections\""
+nft "add rule inet qbt-mark prerouting tcp dport 8080 ct state new ct mark set 9090 counter comment \"Track new WebUI connections\""
 nft "add rule inet qbt-mark output ct mark 9090 meta mark set 8080 counter comment \"Add mark to outgoing packets belonging to a WebUI connection\""
 
 # Route WebUI traffic over "$DEFAULT_IPV4_GATEWAY"
 mkdir -p /etc/iproute2/
 echo "8080 webui" >> /etc/iproute2/rt_tables
 if [ -n "$DEFAULT_IPV4_GATEWAY" ]; then
-	ip rule add fwmark 8080 table webui
+	# Default
+	ip rule add fwmark 8080 table webui 
 	ip route add default via "$DEFAULT_IPV4_GATEWAY" table webui
+	# Look for local networks first
+	ip rule add fwmark 8080 table main suppress_prefixlength 1
 fi
 if [ -n "$DEFAULT_IPV6_GATEWAY" ]; then
-	ip -6 rule add fwmark 8080 table webui
-	ip -6 route add default via "$DEFAULT_IPV6_GATEWAY" eth0 table webui
+	# Default
+	ip -6 rule add fwmark 8080 table webui 
+	ip -6 route add default via "$DEFAULT_IPV6_GATEWAY" table webui
+	# Look for local networks first
+	ip -6 rule add fwmark 8080 table main suppress_prefixlength 1
 fi
 
 # Add firewall table
@@ -83,7 +89,7 @@ fi
 
 # Input to WebUI
 if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
-	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 counter accept comment \"Accept input to the qBt WebUI\""
+	nft "add rule inet firewall input tcp dport 8080 counter accept comment \"Accept input to the qBt WebUI\""
 else
 	nft "add set inet firewall webui_allowed_networks_ipv4 { type ipv4_addr; flags interval ; }"
 	nft "add set inet firewall webui_allowed_networks_ipv6 { type ipv6_addr; flags interval ; }"
@@ -102,8 +108,8 @@ else
 		fi
 	done
 
-	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 ip saddr @webui_allowed_networks_ipv4 counter accept comment \"Accept input to the qBt WebUI \(IPv4\)\""
-	nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport 8080 ip6 saddr @webui_allowed_networks_ipv6 counter accept comment \"Accept input to the qBt WebUI \(IPv6\)\""
+	nft "add rule inet firewall input tcp dport 8080 ip saddr @webui_allowed_networks_ipv4 counter accept comment \"Accept input to the qBt WebUI \(IPv4\)\""
+	nft "add rule inet firewall input tcp dport 8080 ip6 saddr @webui_allowed_networks_ipv6 counter accept comment \"Accept input to the qBt WebUI \(IPv6\)\""
 fi
 
 # Additional port list for scripts or container linking
@@ -113,7 +119,7 @@ if [[ -n "$ADDITIONAL_PORTS" ]]; then
 	for additional_port_item in "${additional_port_list[@]}"; do
 		additional_port_item=$(echo "$additional_port_item" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding additional incoming port $additional_port_item for $DOCKER_INTERFACE"
-		nft "add rule inet firewall input iifname $DOCKER_INTERFACE tcp dport $additional_port_item accept comment \"Accept input to additional port\""
+		nft "add rule inet firewall input tcp dport $additional_port_item accept comment \"Accept input to additional port\""
 	done
 fi
 
@@ -122,7 +128,7 @@ fi
 nft "add rule inet firewall output oifname $VPN_DEVICE_TYPE accept comment \"Accept output to VPN tunnel\""
 nft "add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip daddr @vpn_ipv4 accept comment \"Accept output to VPN server \(IPv4\)\""
 nft "add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip6 daddr @vpn_ipv6 accept comment \"Accept output to VPN server \(IPv6\)\""
-nft "add rule inet firewall output oifname $DOCKER_INTERFACE tcp sport 8080 meta mark 8080 counter accept comment \"Accept outgoing packets belonging to a WebUI connection\""
+nft "add rule inet firewall output tcp sport 8080 meta mark 8080 counter accept comment \"Accept outgoing packets belonging to a WebUI connection\""
 nft "add rule inet firewall output iifname lo accept comment \"Accept output to internal loopback\""
 
 # Additional port list for scripts or container linking
