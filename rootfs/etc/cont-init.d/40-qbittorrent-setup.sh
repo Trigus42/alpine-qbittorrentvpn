@@ -12,12 +12,14 @@ if [[ $DOWNLOAD_DIR_CHOWN != "no" ]]; then
 	chown -R "${PUID}":"${PGID}" /downloads
 fi
 
+qbt_config_path="/config/qBittorrent/config/qBittorrent.conf"
+
 # Check if qBittorrent.conf exists, if not, copy the template over
-if [ ! -e /config/qBittorrent/config/qBittorrent.conf ]; then
+if [ ! -e $qbt_config_path ]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] qBittorrent.conf is missing, this is normal for the first launch! Copying template."
-	cp /defaults/qBittorrent.conf /config/qBittorrent/config/qBittorrent.conf
-	chmod 755 /config/qBittorrent/config/qBittorrent.conf
-	chown "${PUID}":"${PGID}" /config/qBittorrent/config/qBittorrent.conf
+	cp /defaults/qBittorrent.conf $qbt_config_path
+	chmod 755 $qbt_config_path
+	chown "${PUID}":"${PGID}" $qbt_config_path
 fi
 
 # The mess down here checks if SSL is enabled.
@@ -36,28 +38,28 @@ if [[ ${ENABLE_SSL,,} == 'yes' ]]; then
 		openssl req -new -x509 -nodes -out /config/qBittorrent/config/WebUICertificate.crt -keyout /config/qBittorrent/config/WebUIKey.key -subj "/C=NL/ST=localhost/L=localhost/O=/OU=/CN="
 		chown -R "${PUID}":"${PGID}" /config/qBittorrent/config
 	fi
-	if grep -Fxq 'WebUI\HTTPS\CertificatePath=/config/qBittorrent/config/WebUICertificate.crt' "/config/qBittorrent/config/qBittorrent.conf"; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] /config/qBittorrent/config/qBittorrent.conf already has the line WebUICertificate.crt loaded, nothing to do."
+	if grep -Fxq 'WebUI\HTTPS\CertificatePath=/config/qBittorrent/config/WebUICertificate.crt' "$qbt_config_path"; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] $qbt_config_path already has the line WebUICertificate.crt loaded, nothing to do."
 	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] /config/qBittorrent/config/qBittorrent.conf doesn't have the WebUICertificate.crt loaded. Added it to the config."
-		echo 'WebUI\HTTPS\CertificatePath=/config/qBittorrent/config/WebUICertificate.crt' >> "/config/qBittorrent/config/qBittorrent.conf"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path doesn't have the WebUICertificate.crt loaded. Added it to the config."
+		echo 'WebUI\HTTPS\CertificatePath=/config/qBittorrent/config/WebUICertificate.crt' >> "$qbt_config_path"
 	fi
-	if grep -Fxq 'WebUI\HTTPS\KeyPath=/config/qBittorrent/config/WebUIKey.key' "/config/qBittorrent/config/qBittorrent.conf"; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] /config/qBittorrent/config/qBittorrent.conf already has the line WebUIKey.key loaded, nothing to do."
+	if grep -Fxq 'WebUI\HTTPS\KeyPath=/config/qBittorrent/config/WebUIKey.key' "$qbt_config_path"; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] $qbt_config_path already has the line WebUIKey.key loaded, nothing to do."
 	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] /config/qBittorrent/config/qBittorrent.conf doesn't have the WebUIKey.key loaded. Added it to the config."
-		echo 'WebUI\HTTPS\KeyPath=/config/qBittorrent/config/WebUIKey.key' >> "/config/qBittorrent/config/qBittorrent.conf"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path doesn't have the WebUIKey.key loaded. Added it to the config."
+		echo 'WebUI\HTTPS\KeyPath=/config/qBittorrent/config/WebUIKey.key' >> "$qbt_config_path"
 	fi
-	if grep -xq 'WebUI\\HTTPS\\Enabled=true\|WebUI\\HTTPS\\Enabled=false' "/config/qBittorrent/config/qBittorrent.conf"; then
-		if grep -xq 'WebUI\\HTTPS\\Enabled=false' "/config/qBittorrent/config/qBittorrent.conf"; then
-			echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] /config/qBittorrent/config/qBittorrent.conf does have the WebUI\HTTPS\Enabled set to false, changing it to true."
-			sed -i 's/WebUI\\HTTPS\\Enabled=false/WebUI\\HTTPS\\Enabled=true/g' "/config/qBittorrent/config/qBittorrent.conf"
+	if grep -xq 'WebUI\\HTTPS\\Enabled=true\|WebUI\\HTTPS\\Enabled=false' "$qbt_config_path"; then
+		if grep -xq 'WebUI\\HTTPS\\Enabled=false' "$qbt_config_path"; then
+			echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path does have the WebUI\HTTPS\Enabled set to false, changing it to true."
+			sed -i 's/WebUI\\HTTPS\\Enabled=false/WebUI\\HTTPS\\Enabled=true/g' "$qbt_config_path"
 		else
-			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] /config/qBittorrent/config/qBittorrent.conf does have the WebUI\HTTPS\Enabled already set to true."
+			echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] $qbt_config_path does have the WebUI\HTTPS\Enabled already set to true."
 		fi
 	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] /config/qBittorrent/config/qBittorrent.conf doesn't have the WebUI\HTTPS\Enabled loaded. Added it to the config."
-		echo 'WebUI\HTTPS\Enabled=true' >> "/config/qBittorrent/config/qBittorrent.conf"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path doesn't have the WebUI\HTTPS\Enabled loaded. Added it to the config."
+		echo 'WebUI\HTTPS\Enabled=true' >> "$qbt_config_path"
 	fi
 else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ENABLE_SSL is set to ${ENABLE_SSL}, SSL is not enabled. This could cause issues with logging if other apps use the same Cookie name (SID)."
@@ -72,6 +74,16 @@ if [[ -n "${UMASK}" ]]; then
 else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] UMASK not defined (via -e UMASK), defaulting to '002'"
 	export UMASK="002"
+fi
+
+# Set WebUI password
+if [[ -n "${WEBUI_PASSWORD}" ]] && ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Setting WebUI password to WEBUI_PASSWORD"
+	salt="$(dd if=/dev/urandom bs=16 count=1 | base64)"
+	key="$(/helper/dwk "$WEBUI_PASSWORD" "$salt" | head -2 | tail -1)"
+	sed -i "/\[Preferences\]/a WebUI\\\Password_PBKDF2=\"@ByteArray($salt:$key)\"" "$qbt_config_path"
+elif ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WebUI password not set. To access the WebUI set a password or get a temporary password from the qBittorrent logs."
 fi
 
 ##########

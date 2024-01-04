@@ -1,3 +1,13 @@
+FROM golang:1.21 as go-builder
+
+WORKDIR /app
+
+COPY build/dwk/* ./
+RUN \
+    go mod download; \
+    CGO_ENABLED=0 GOOS=linux go build -o ./dwk
+
+
 FROM alpine:3.19
 
 # Exit if one of the cont-init.d scripts fails
@@ -43,6 +53,12 @@ RUN \
     chmod +x /bin/qbittorrent-nox
 
 COPY rootfs /
+
+RUN \
+    # Add go binaries from go-builder stage
+    --mount=type=bind,from=go-builder,src=/app/,dst=/mnt/go-builder/ \
+    cp /mnt/go-builder/dwk /helper/dwk
+
 RUN \ 
     # Set exec permissions
     chmod +x -R /helper/ /etc/cont-init.d/ /etc/services.d/ && \
