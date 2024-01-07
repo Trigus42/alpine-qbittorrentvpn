@@ -2,21 +2,16 @@ version: "3.3"
 
 services:
   qbittorrent:
-    # build: ./
     image: trigus42/qbittorrentvpn
     container_name: qbittorrent
     environment:
-      - VPN_ENABLED=yes
       - VPN_TYPE=openvpn
       - VPN_USERNAME=YOURUSERNAME
       - VPN_PASSWORD=YOURPASSWORD
-      - LAN_NETWORK=192.168.0.0/24
-      - ENABLE_SSL=yes
     volumes:
       - './config/:/config'
     ports:
       - 80:8080
-      - 443:8080
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

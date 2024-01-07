@@ -140,7 +140,7 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
             export VPN_PROTOCOL="udp"
         fi
     fi
-    # Required for use in iptables
+    # Required for use in firewall rules
     if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
         export VPN_PROTOCOL="tcp"
     fi
@@ -192,7 +192,7 @@ fi
 # Exit if any of the following commands fails
 set -e
 
-if [[ $VPN_ENABLED == "yes" ]]; then
+if [[ $VPN_ENABLED != "no" ]]; then
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
 		mkdir -p /dev/net
@@ -210,10 +210,18 @@ if [[ $VPN_ENABLED == "yes" ]]; then
         pushd /config/openvpn/ > /dev/null
 
         # Check if credential file exists and is not empty
-        if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+        if [ "$(cat /sys/module/ipv6/parameters/disable)" == "0" ]; then
+            if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
+                openvpn --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            else
+                openvpn --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            fi
         else
-            openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
+                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            else
+                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+            fi
         fi
 
         # Revert to previous directory

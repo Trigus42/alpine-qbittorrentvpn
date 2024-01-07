@@ -1,0 +1,31 @@
+version: "3.3"
+
+services:
+  qbittorrent:
+    image: trigus42/qbittorrentvpn
+    container_name: qbittorrent
+    environment:
+      - VPN_TYPE=wireguard
+    volumes:
+      - './config/:/config'
+    ports:
+     - 80:8080
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    networks:
+      default:
+      ipv6net:
+
+networks:
+  ipv6net:
+     enable_ipv6: true
+     ipam:
+       config:
+        # Just choose some random IPv6 subnet. Must be unique on your docker host
+        # To generate a random private 64 bit IPv6 address range you can run:
+        # printf "fd%x:%x:%x:%x::/64\n" "$(( $RANDOM/256 ))" "$RANDOM" "$RANDOM" "$RANDOM"
+         - subnet: fd9b:e348:4224:4e3a::/64 
