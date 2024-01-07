@@ -6,8 +6,9 @@ services:
     container_name: qbittorrent
     environment:
       - VPN_TYPE=openvpn
-      - VPN_USERNAME=YOURUSERNAME
-      - VPN_PASSWORD=YOURPASSWORD
+      - VPN_USERNAME=MY_VPN_USERNAME
+      - VPN_PASSWORD=MY_VPN_PASSWORD
+      - WEBUI_PASSWORD=MY_WEBUI_PASSWORD
     volumes:
       - './config/:/config'
     ports:

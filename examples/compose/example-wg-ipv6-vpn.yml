@@ -6,6 +6,7 @@ services:
     container_name: qbittorrent
     environment:
       - VPN_TYPE=wireguard
+      - WEBUI_PASSWORD=MY_WEBUI_PASSWORD
     volumes:
       - './config/:/config'
     ports:

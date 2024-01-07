@@ -12,5 +12,5 @@ Example compose that allows for using IPv6 (and IPv4) over the VPN (but doesn't 
 
 ## example-wg-ipv6-connection.yml
 
-Example compose that allows for connecting to an VPN server over IPv6 (and IPv4).
-In addition to this config, you also have to enable IPv6 support in the docker daemon (disabled by default).
+Example compose that allows for connecting to an VPN server over IPv6 (and IPv4).  
+In addition to this config, you also have to [enable IPv6 support in the docker daemon](https://docs.docker.com/config/daemon/ipv6/) (disabled by default).

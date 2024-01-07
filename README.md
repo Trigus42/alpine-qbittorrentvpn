@@ -7,10 +7,11 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 
 ## Features
 
+* Netfilter **killswitch** to prevent IP leaking when VPN connection fails
+* Selectively enable or disable **WireGuard** or **OpenVPN** support
+* **IPv6** support
+* Configurable **UID** and **GID** for config files and /downloads for qBittorrent
 * Build for **amd64**, **arm64**, **armv8** and **armv7**
-* Selectively enable or disable WireGuard or OpenVPN support
-* IP tables killswitch to prevent IP leaking when VPN connection fails
-* Configurable UID and GID for config files and /downloads for qBittorrent
 * ...
 
 ## Software
@@ -25,36 +26,6 @@ Create a docker compose file or modify one of the [example compose files](exampl
 
 ```sh
 docker compose up -d
-```
-
-## CLI
-
-&NewLine;
-```sh
-$ docker run --privileged -d \
-             -v /your/config/path/:/config \
-             -v /your/downloads/path/:/downloads \
-             -e "VPN_TYPE=wireguard" \
-             -p 8080:8080 \
-             --restart unless-stopped \
-             trigus42/qbittorrentvpn
-```
-
-## Unprivileged mode
-(Omit the `--privileged` flag - mainly for security)
-
-&NewLine;
-#### Wireguard:
-&NewLine;
-```sh
---cap-add=NET_ADMIN \
---sysctl net.ipv4.conf.all.src_valid_mark=1 \
-```
-
-#### OpenVPN:
-&NewLine;
-```sh
---cap-add=NET_ADMIN \
 ```
 
 &NewLine;
