@@ -33,9 +33,15 @@ while :; do
     if [[ $VPN_ENABLED != "no" ]]; then
         # Check if it is possible to bypass the VPN
         if (ping -I "$DOCKER_INTERFACE" -c 1 "$HEALTH_CHECK_HOST" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
-            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Exiting.."
-            print_exit_info
-            exit 1
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Killing qBittorrent!"
+            s6-svc -k -d /var/run/s6/services/qbittorrent/
+            killall qbittorrent-nox
+
+            # Not required but we have nothing better to do now
+            while :; do
+                killall qbittorrent-nox >/dev/null 2>&1
+                sleep 1
+            done
         fi
     fi
 
