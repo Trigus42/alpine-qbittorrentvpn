@@ -190,6 +190,15 @@ if [[ "${VPN_TYPE}" == "wireguard" ]]; then
     fi
 fi
 
+##########
+# Start VPN
+
+if [[ "$DEBUG" == "yes" ]]; then
+    # shellcheck disable=SC1091
+    source /helper/functions.sh
+    test_connection
+fi
+
 # Exit if any of the following commands fails
 set -e
 
@@ -259,6 +268,12 @@ if [[ $VPN_ENABLED != "no" ]]; then
 fi
 
 set +e
+
+if [[ "$DEBUG" == "yes" ]]; then
+    # shellcheck disable=SC1091
+    source /helper/functions.sh
+    test_connection
+fi
 
 ##########
 # Save envirnonment variables

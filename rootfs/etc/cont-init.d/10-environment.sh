@@ -32,6 +32,31 @@ if [[ -n "${WEBUI_ALLOWED_NETWORKS}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WEBUI_ALLOWED_NETWORKS is defined as $WEBUI_ALLOWED_NETWORKS"
 fi
 
+#########
+# Healthcheck
+
+DEFAULT_HOST="one.one.one.one"
+DEFAULT_INTERVAL=5
+DEFAULT_TIMEOUT=5
+
+# If HEALTH_CHECK_HOST is zero (not set) use DEFAULT_HOST
+if [[ -z "${HEALTH_CHECK_HOST}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_HOST is not set. Using default host ${DEFAULT_HOST}"
+    HEALTH_CHECK_HOST=${DEFAULT_HOST}
+fi
+
+# If HEALTH_CHECK_INTERVAL is zero (not set) use DEFAULT_INTERVAL
+if [[ -z "${HEALTH_CHECK_INTERVAL}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_INTERVAL is not set. Using default interval of ${DEFAULT_INTERVAL}s"
+    HEALTH_CHECK_INTERVAL=${DEFAULT_INTERVAL}
+fi
+
+# If HEALTH_CHECK_TIMEOUT is zero (not set) use DEFAULT_TIMEOUT
+if [[ -z "${HEALTH_CHECK_TIMEOUT}" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_TIMEOUT is not set. Using default interval of ${DEFAULT_TIMEOUT}s"
+    HEALTH_CHECK_TIMEOUT=${DEFAULT_TIMEOUT}
+fi
+
 ##########
 # Network environment
 
@@ -185,7 +210,7 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE")
+export_vars=("DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE" "HEALTH_CHECK_HOST" "HEALTH_CHECK_INTERVAL" "HEALTH_CHECK_TIMEOUT")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"

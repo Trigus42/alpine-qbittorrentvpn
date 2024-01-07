@@ -155,6 +155,10 @@ if [[ "$DEBUG" == "yes" ]]; then
 	echo "--------------------"
 	nft list ruleset
 	echo "--------------------"
+
+    # shellcheck disable=SC1091
+    source /helper/functions.sh
+    test_connection
 fi
 
 ##########
