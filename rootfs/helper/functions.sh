@@ -31,3 +31,30 @@ test_connection () {
         echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Ping to $vpn_remote_ip via $DOCKER_INTERFACE failed"
     fi
 }
+
+stop_container() {
+    s6-svc -k -d /var/run/s6/services/qbittorrent/ >/dev/null 2>&1
+    s6-svc -k -d /var/run/s6/services/healthcheck/ >/dev/null 2>&1
+    killall qbittorrent-nox >/dev/null 2>&1
+
+    sleep infinity
+}
+
+print_exit_info () {
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip addr show' output:"
+	echo "--------------------"
+	ip addr show
+	echo "--------------------"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip route show table main' output:"
+	echo "--------------------"
+	ip route show table main
+	echo "--------------------"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip rule' output:"
+	echo "--------------------"
+	ip rule
+	echo "--------------------"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'netstat -lpn' output:"
+	echo "--------------------"
+	netstat -lpn
+	echo "--------------------"
+}

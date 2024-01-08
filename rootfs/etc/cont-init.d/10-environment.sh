@@ -1,6 +1,9 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+# shellcheck disable=SC1091
+source /helper/functions.sh
+
 ##########
 # Host network mode?
 
@@ -10,9 +13,7 @@ check_network=$(ifconfig | grep docker0 || true)
 # If network interface docker0 is present then we are running in host mode and thus must exit
 if [[ -n "${check_network}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode"
-	# Sleep so it wont 'spam restart'
-	sleep 5
-	exit 1
+	stop_container
 fi
 
 ##########

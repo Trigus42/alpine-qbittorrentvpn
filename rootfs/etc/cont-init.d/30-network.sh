@@ -1,6 +1,9 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+# shellcheck disable=SC1091
+source /helper/functions.sh
+
 ##########
 # Skip - Only needed if VPN is enabled
 
@@ -156,8 +159,6 @@ if [[ "$DEBUG" == "yes" ]]; then
 	nft list ruleset
 	echo "--------------------"
 
-    # shellcheck disable=SC1091
-    source /helper/functions.sh
     test_connection
 fi
 

@@ -1,24 +1,8 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
-print_exit_info () {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip addr show' output:"
-	echo "--------------------"
-	ip addr show
-	echo "--------------------"
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip route show table main' output:"
-	echo "--------------------"
-	ip route show table main
-	echo "--------------------"
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'ip rule' output:"
-	echo "--------------------"
-	ip rule
-	echo "--------------------"
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR INFO] 'netstat -lpn' output:"
-	echo "--------------------"
-	netstat -lpn
-	echo "--------------------"
-}
+# shellcheck disable=SC1091
+source /helper/functions.sh
 
 # Wait until qbittorrent-nox is up
 while ! (pgrep -o qbittorrent-nox >/dev/null 2>&1); do
@@ -35,14 +19,7 @@ if [[ $VPN_ENABLED != "no" ]]; then
             # Check if it is possible to bypass the VPN
             if (ping -I "$DOCKER_INTERFACE" -c 1 "$HEALTH_CHECK_HOST" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
                 echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Killing qBittorrent!"
-                s6-svc -k -d /var/run/s6/services/qbittorrent/
-                killall qbittorrent-nox
-
-                # Not required but we have nothing better to do now
-                while :; do
-                    killall qbittorrent-nox >/dev/null 2>&1
-                    sleep 1
-                done
+                stop_container
             fi
         fi
     done ) &

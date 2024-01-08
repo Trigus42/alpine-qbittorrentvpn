@@ -1,6 +1,9 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+# shellcheck disable=SC1091
+source /helper/functions.sh
+
 ##########
 # Skip if VPN is disabled
 
@@ -40,9 +43,7 @@ if [[ -z ${VPN_CONFIG} ]]; then
     else
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No WireGuard config file found in /config/wireguard/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.conf'"
     fi
-    # Sleep so it wont 'spam restart'
-    sleep 5
-    exit 1
+    stop_container
 fi
 
 ##########
@@ -68,9 +69,7 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
         cp /config/openvpn/credentials.conf /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf
     else
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] No credentials set and didn't find a credential config file."
-        # Sleep so it wont 'spam restart'
-        sleep 5
-        exit 1
+        stop_container
     fi
 fi
 
@@ -90,11 +89,9 @@ fi
 if [[ -n "${vpn_remote_line}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
 else
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line, showing contents of file before exit..."
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line:"
     cat "${VPN_CONFIG}"
-    # Sleep so it wont 'spam restart'
-    sleep 5
-    exit 1
+    stop_container
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -106,10 +103,8 @@ fi
 if [[ -n "${VPN_REMOTE}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_REMOTE defined as '${VPN_REMOTE}'"
 else
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_REMOTE not found in ${VPN_CONFIG}, exiting..."
-    # Sleep so it wont 'spam restart'
-    sleep 5
-    exit 1
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_REMOTE not found in ${VPN_CONFIG}"
+    stop_container
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -121,10 +116,8 @@ fi
 if [[ -n "${VPN_PORT}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PORT defined as '${VPN_PORT}'"
 else
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_PORT not found in ${VPN_CONFIG}, exiting..."
-    # Sleep so it wont 'spam restart'
-    sleep 5
-    exit 1
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_PORT not found in ${VPN_CONFIG}"
+    stop_container
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -154,10 +147,8 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
     VPN_DEVICE_TYPE=$( grep -P -o -m 1 '(?<=^dev\s)[^\s]+' < "${VPN_CONFIG}")
 
     if [[ -z "${VPN_DEVICE_TYPE}" ]]; then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}, exiting..."
-        # Sleep so it wont 'spam restart'
-        sleep 5
-        exit 1
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}"
+        stop_container
     fi
 
     # If device name has no number, append 0
@@ -184,8 +175,7 @@ if [[ "${VPN_TYPE}" == "wireguard" ]]; then
             sed -i -E 's/\[\[ \$proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' "$(command -v wg-quick)"
         else
             echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Trying to run in unprivileged mode but $(sysctl net.ipv4.conf.all.src_valid_mark)"
-            sleep 5
-            exit 1
+            stop_container
         fi
     fi
 fi
@@ -194,8 +184,6 @@ fi
 # Start VPN
 
 if [[ "$DEBUG" == "yes" ]]; then
-    # shellcheck disable=SC1091
-    source /helper/functions.sh
     test_connection
 fi
 
@@ -270,8 +258,6 @@ fi
 set +e
 
 if [[ "$DEBUG" == "yes" ]]; then
-    # shellcheck disable=SC1091
-    source /helper/functions.sh
     test_connection
 fi
 
