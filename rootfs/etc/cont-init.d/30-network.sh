@@ -12,6 +12,22 @@ if [[ $VPN_ENABLED == "no" ]]; then
 fi
 
 ##########
+# Check and load nf_tables kernel module
+
+if ! (lsmod | grep nfc &> /dev/null); then
+	if [[ "$DEBUG" == "yes" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] nf_tables kernel module not loaded"
+	fi
+
+	if ! (modprobe nfc > /dev/null 2>&1); then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Failed to load nf_tables kernel module. Add the required volume and capability to this container or load it manually"
+		stop_container
+	elif [[ "$DEBUG" == "yes" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Successfully loaded nf_tables kernel module"
+	fi
+fi
+
+##########
 # nft rules
 
 # Mark outgoing packets belonging to a WebUI connection (for routing and firewall)
