@@ -14,13 +14,17 @@ fi
 ##########
 # Check and load nf_tables kernel module
 
-if ! (lsmod | grep nfc &> /dev/null); then
+if ! (lsmod | grep nf_tables &> /dev/null); then
 	if [[ "$DEBUG" == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] nf_tables kernel module not loaded"
 	fi
 
-	if ! (modprobe nfc > /dev/null 2>&1); then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Failed to load nf_tables kernel module. Add the required volume and capability to this container or load it manually"
+	if ! modprobe_output=$(modprobe nf_tables 2>&1); then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Failed to load nf_tables kernel module:"
+		echo "--------------------"
+		echo "$modprobe_output"
+		echo "--------------------"
+		echo "Try adding the required volume and capability to this container or load nf_tables manually"
 		stop_container
 	elif [[ "$DEBUG" == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Successfully loaded nf_tables kernel module"
