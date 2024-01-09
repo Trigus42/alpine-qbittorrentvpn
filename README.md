@@ -41,7 +41,7 @@ docker compose up -d
 | `trigus42/qbittorrentvpn:COMMIT-HASH-qbtx.x.x` | Image built from the commit with corresponding SHA hash and qBittorrent version x.x.x |
 | `trigus42/qbittorrentvpn:BRANCH` | Image build from the corresponding branch |
 
-WARNING: Only with the `latest` tag will you continuously revieve updates.
+WARNING: Only with the `latest` tag will you continuously receive updates.
 
 ## Environment Variables
 | Variable | Function | Example | Default |
@@ -152,7 +152,7 @@ When encountering an issue, please first attempt to reproduce it using the most 
 
 Upon opening an issue, kindly provide the following details:
 
-- Full logs from container boot to exit, preferably with the `DEBUG=true` environment variable set.
+- Full logs from container boot to exit, preferably with the `DEBUG=yes` environment variable set.
 - Your Docker compose file or Docker run command.
 - Depending on your situation, other relevant information such as:
   - The image where the issue first arose. Including tag information such as date and commit hash can be immensely useful, especially if you suspect that a recent change may have introduced the problem.
