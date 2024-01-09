@@ -36,7 +36,7 @@ fi
 #########
 # Healthcheck
 
-DEFAULT_HOST="one.one.one.one"
+DEFAULT_HOST="1.1.1.1"
 DEFAULT_INTERVAL=5
 DEFAULT_TIMEOUT=5
 
