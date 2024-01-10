@@ -18,14 +18,16 @@ test_connection () {
     fi
 
     # Resolve VPN_REMOTE if domain
-    if (ipcalc -c "$VPN_REMOTE" > /dev/null 2>&1); then
+    if [[ -n "$VPN_REMOTE_IP" ]]; then
+        vpn_remote_ip="$VPN_REMOTE_IP"
+    elif (ipcalc -c "$VPN_REMOTE" > /dev/null 2>&1); then
         vpn_remote_ip=$VPN_REMOTE
     else
         vpn_remote_ip="$(dig +short "$VPN_REMOTE" | head -n 1)"
         echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] $VPN_REMOTE resolved to $vpn_remote_ip"
     fi
 
-    if (ping -c 1 -I "$DOCKER_INTERFACE" "$vpn_remote_ip" > /dev/null 2>&1); then
+    if (ping -w 1 -c 1 -I "$DOCKER_INTERFACE" "$vpn_remote_ip" > /dev/null 2>&1); then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Ping to $vpn_remote_ip via $DOCKER_INTERFACE succeeded"
     else
         echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Ping to $vpn_remote_ip via $DOCKER_INTERFACE failed"
