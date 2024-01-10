@@ -17,7 +17,7 @@ test_connection () {
         echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Ping to $health_check_ip failed"
     fi
 
-    # Resolve HEALTH_CHECK_HOST if domain
+    # Resolve VPN_REMOTE if domain
     if (ipcalc -c "$VPN_REMOTE" > /dev/null 2>&1); then
         vpn_remote_ip=$VPN_REMOTE
     else

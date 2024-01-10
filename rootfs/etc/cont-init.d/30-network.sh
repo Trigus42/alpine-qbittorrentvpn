@@ -42,33 +42,16 @@ fi
 # Add firewall table
 nft add table inet firewall
 
-## VPN_REMOTE IPs
-
-# VPN_REMOTE is already an IPv4 address
-if ipcalc -c -4 "$VPN_REMOTE"; then
-	ipv4_addresses=("$VPN_REMOTE")
-	ipv6_addresses=()
-# VPN_REMOTE is already an IPv6 address
-elif ipcalc -c -6 "$VPN_REMOTE"; then
-	ipv4_addresses=()
-	ipv6_addresses=("$VPN_REMOTE")
-# VPN_REMOTE is a hostname
-else
-	# Get a list of the IPv4 and IPv6 addresses
-	IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
-	IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
-fi
-
 # Create the sets for storing the IPv4 and IPv6 addresses
 nft "add set inet firewall vpn_ipv4 { type ipv4_addr ; }"
 nft "add set inet firewall vpn_ipv6 { type ipv6_addr ; }"
 
 # Add each IP address to its respective set
-for address in "${ipv4_addresses[@]}"; do
+for address in "${VPN_REMOTE_IPv4_ADDRESSES[@]}"; do
 	nft "add element inet firewall vpn_ipv4 { $address }"
 done
 
-for address in "${ipv6_addresses[@]}"; do
+for address in "${VPN_REMOTE_IPv6_ADDRESSES[@]}"; do
 	nft "add element inet firewall vpn_ipv6 { $address }"
 done
 

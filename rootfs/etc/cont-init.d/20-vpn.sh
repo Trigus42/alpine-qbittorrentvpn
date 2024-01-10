@@ -207,27 +207,48 @@ if [[ $VPN_ENABLED != "no" ]]; then
         # Allow to specify relative positions for additional files (like ca, cert, key, ...)
         pushd /config/openvpn/ > /dev/null
 
-        # Check if credential file exists and is not empty
+        # Check if IPv6 is enabled
         if [ "$(cat /sys/module/ipv6/parameters/disable)" == "0" ]; then
+            # Check if credential file exists and is not empty
             if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-                openvpn --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+                openvpn \
+                    --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
+                    --config "${VPN_CONFIG}" \
+                    --script-security 2 \
+                    --route-up /helper/resume-after-connect \
+                | tee /var/log/openvpn.log &
             else
-                openvpn --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+                openvpn \
+                    --config "${VPN_CONFIG}" \
+                    --script-security 2 \
+                    --route-up /helper/resume-after-connect \
+                | tee /var/log/openvpn.log &
             fi
         else
+            # Check if credential file exists and is not empty
             if [[ -s /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
-                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+                openvpn \
+                    --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" \
+                    --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
+                    --config "${VPN_CONFIG}" \
+                    --script-security 2 \
+                    --route-up /helper/resume-after-connect \
+                | tee /var/log/openvpn.log &
             else
-                openvpn --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" --config "${VPN_CONFIG}" --script-security 2 --route-up /helper/resume-after-connect &
+                openvpn \
+                    --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" \
+                    --config "${VPN_CONFIG}" \
+                    --script-security 2 \
+                    --route-up /helper/resume-after-connect \
+                | tee /var/log/openvpn.log &
             fi
         fi
 
         # Revert to previous directory
         popd > /dev/null
 
-        # Capture the PID of the background OpenVPN process
-        openvpn_pid=$!
-
+        # Get OpenVPN PID
+        openvpn_pid=$(pidof openvpn)
         if [[ "$DEBUG" == "yes" ]]; then
             echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] OpenVPN PID: $openvpn_pid"
         fi
@@ -235,7 +256,7 @@ if [[ $VPN_ENABLED != "no" ]]; then
         # Wait for startup
         while :; do
             # Process exited
-            if ! ps -p $openvpn_pid > /dev/null; then
+            if ! ps -p "$openvpn_pid" > /dev/null; then
                 echo "--------------------"
                 echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Failed to start OpenVPN"
                 exit 1
@@ -257,6 +278,39 @@ fi
 
 set +e
 
+## VPN_REMOTE IP
+
+VPN_REMOTE_IPv4_ADDRESSES=()
+VPN_REMOTE_IPv6_ADDRESSES=()
+
+# VPN_REMOTE is already an IPv4 address
+if (ipcalc -c -4 "$VPN_REMOTE" > /dev/null 2>&1); then
+	VPN_REMOTE_IPv4_ADDRESSES+=("$VPN_REMOTE")
+# VPN_REMOTE is already an IPv6 address
+elif (ipcalc -c -6 "$VPN_REMOTE" > /dev/null 2>&1); then
+	VPN_REMOTE_IPv6_ADDRESSES+=("$VPN_REMOTE")
+# VPN_REMOTE is a hostname
+else
+	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+		while ! VPN_REMOTE_IP=$(grep -oP 'Peer Connection Initiated with [^\d]+\K(\d+(\.\d+){3})(?=:\d+)' < /var/log/openvpn.log); do sleep 0.1; done
+	else
+		VPN_REMOTE_IP="$(wg show | grep -oP '(?<=endpoint:\s).+(?=:\d+)')"
+	fi
+
+	if (ipcalc -c -4 "$VPN_REMOTE_IP" > /dev/null 2>&1); then
+		VPN_REMOTE_IPv4_ADDRESSES+=("$VPN_REMOTE_IP")
+	elif (ipcalc -c -6 "$VPN_REMOTE_IP" > /dev/null 2>&1); then
+		VPN_REMOTE_IPv6_ADDRESSES+=("$VPN_REMOTE_IP")
+	else
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] neither $VPN_REMOTE (VPN_REMOTE) nor \"$VPN_REMOTE_IP\" (obtained from the VPN client) is a valid IP"
+		stop_container
+	fi
+
+	# Get a list of possible IPv4 and IPv6 addresses using DNS
+	# IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
+	# IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
+fi
+
 if [[ "$DEBUG" == "yes" ]]; then
     test_connection
 fi
@@ -266,7 +320,7 @@ fi
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("VPN_REMOTE" "VPN_PORT" "VPN_PROTOCOL" "VPN_DEVICE_TYPE" "VPN_CONFIG_NAME")
+export_vars=("VPN_REMOTE" "VPN_PORT" "VPN_PROTOCOL" "VPN_DEVICE_TYPE" "VPN_CONFIG_NAME" "VPN_REMOTE_IP" "VPN_REMOTE_IPv4_ADDRESSES" "VPN_REMOTE_IPv6_ADDRESSES")
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"
