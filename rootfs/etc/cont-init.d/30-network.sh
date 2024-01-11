@@ -46,6 +46,13 @@ nft add table inet firewall
 nft "add set inet firewall vpn_ipv4 { type ipv4_addr ; }"
 nft "add set inet firewall vpn_ipv6 { type ipv6_addr ; }"
 
+if [[ "$DEBUG" == "yes" ]]; then
+	# shellcheck disable=SC2154
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] VPN_REMOTE_IPv4_ADDRESSES defined as (${VPN_REMOTE_IPv4_ADDRESSES[*]})"
+	# shellcheck disable=SC2154
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] VPN_REMOTE_IPv6_ADDRESSES defined as (${VPN_REMOTE_IPv6_ADDRESSES[*]})"
+fi
+
 # Add each IP address to its respective set
 for address in "${VPN_REMOTE_IPv4_ADDRESSES[@]}"; do
 	nft "add element inet firewall vpn_ipv4 { $address }"
