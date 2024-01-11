@@ -6,9 +6,19 @@ on:
     # Publish semver tags as releases.
     tags:
       - 'v*.*.*'
+    paths:
+      - '.github/workflows**'
+      - 'rootfs/**'
+      - 'build/**'
+      - 'Dockerfile'
   pull_request:
     branches:
       - 'master'
+    paths:
+      - '.github/workflows**'
+      - 'rootfs/**'
+      - 'build/**'
+      - 'Dockerfile'
   workflow_dispatch:
 
 
