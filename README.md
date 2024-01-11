@@ -111,10 +111,11 @@ id <username>
 ```
 
 # Customization
-Just mount your script to /etc/cont-init.d/ in the container. The execution order is determined by the number prefix. See [examples/scripts](examples/scripts) for examples.
+Just mount your script to `/etc/cont-init.d/your_script.sh` in the container. The execution order is determined by the number prefix.  
 
-## Firewall
-To add custom firewall rules, you can use iptables or nftables. 
+See [examples/scripts](examples/scripts) for examples.  
+
+Unfortunately, I can't guarantee that variables used in the default scripts or the execution order stay the same. Please try to make your custom scripts independent of those things.
 
 # Build it yourself
 &NewLine;
