@@ -46,6 +46,40 @@ nft add table inet firewall
 nft "add set inet firewall vpn_ipv4 { type ipv4_addr ; }"
 nft "add set inet firewall vpn_ipv6 { type ipv6_addr ; }"
 
+
+## VPN_REMOTE IP
+
+VPN_REMOTE_IPv4_ADDRESSES=()
+VPN_REMOTE_IPv6_ADDRESSES=()
+
+# VPN_REMOTE is already an IPv4 address
+if (ipcalc -c -4 "$VPN_REMOTE" > /dev/null 2>&1); then
+	VPN_REMOTE_IPv4_ADDRESSES+=("$VPN_REMOTE")
+# VPN_REMOTE is already an IPv6 address
+elif (ipcalc -c -6 "$VPN_REMOTE" > /dev/null 2>&1); then
+	VPN_REMOTE_IPv6_ADDRESSES+=("$VPN_REMOTE")
+# VPN_REMOTE is a hostname
+else
+	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
+		while ! VPN_REMOTE_IP=$(grep -o -m 1 -P 'Peer Connection Initiated with [^\d]+\K(\d+(\.\d+){3})(?=:\d+)' < /var/log/openvpn.log); do sleep 0.1; done
+	else
+		VPN_REMOTE_IP="$(wg show | grep -o -m 1 -P '((?<=endpoint:\s\[)[0-9a-f:]+(?=\]:\d+$))|((?<=endpoint:\s)[0-9.]+(?=:\d+$))')"
+	fi
+
+	if (ipcalc -c -4 "$VPN_REMOTE_IP" > /dev/null 2>&1); then
+		VPN_REMOTE_IPv4_ADDRESSES+=("$VPN_REMOTE_IP")
+	elif (ipcalc -c -6 "$VPN_REMOTE_IP" > /dev/null 2>&1); then
+		VPN_REMOTE_IPv6_ADDRESSES+=("$VPN_REMOTE_IP")
+	else
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] neither $VPN_REMOTE (VPN_REMOTE) nor \"$VPN_REMOTE_IP\" (obtained from the VPN client) is a valid IP"
+		stop_container
+	fi
+
+	# Get a list of possible IPv4 and IPv6 addresses using DNS
+	# IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
+	# IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
+fi
+
 if [[ "$DEBUG" == "yes" ]]; then
 	# shellcheck disable=SC2154
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] VPN_REMOTE_IPv4_ADDRESSES defined as (${VPN_REMOTE_IPv4_ADDRESSES[*]})"
