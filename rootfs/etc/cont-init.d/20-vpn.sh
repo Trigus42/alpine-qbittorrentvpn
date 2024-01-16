@@ -81,9 +81,9 @@ dos2unix "${VPN_CONFIG}" 1> /dev/null
 
 # Parse values from the ovpn or conf file
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+    export vpn_remote_line=$( (grep -o -m 1 -P '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
 else
-    export vpn_remote_line=$( (grep -P -o -m 1 '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
+    export vpn_remote_line=$( (grep -o -m 1 -P '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
 fi
 
 if [[ -n "${vpn_remote_line}" ]]; then
@@ -95,9 +95,9 @@ else
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '^[^\s\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^\s\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 else
-    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '^[^:\r\n]+')
+    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^:\r\n]+')
 fi
 
 if [[ -n "${VPN_REMOTE}" ]]; then
@@ -121,11 +121,11 @@ else
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    export VPN_PROTOCOL=$( (grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
+    export VPN_PROTOCOL=$( (grep -o -m 1 -P '(?<=^proto\s)[^\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~') < "${VPN_CONFIG}")
     if [[ -n "${VPN_PROTOCOL}" ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
     else
-        export VPN_PROTOCOL=$(echo "${vpn_remote_line}" | grep -P -o -m 1 'udp|tcp-client|tcp$' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+        export VPN_PROTOCOL=$(echo "${vpn_remote_line}" | grep -o -m 1 -P 'udp|tcp-client|tcp$' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
         if [[ -n "${VPN_PROTOCOL}" ]]; then
             echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'"
         else
@@ -144,7 +144,7 @@ fi
 
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    VPN_DEVICE_TYPE=$( grep -P -o -m 1 '(?<=^dev\s)[^\s]+' < "${VPN_CONFIG}")
+    VPN_DEVICE_TYPE=$( grep -o -m 1 -P '(?<=^dev\s)[^\s]+' < "${VPN_CONFIG}")
 
     if [[ -z "${VPN_DEVICE_TYPE}" ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}"
