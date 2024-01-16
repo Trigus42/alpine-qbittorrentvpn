@@ -97,7 +97,7 @@ fi
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
     export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^\s\r\n]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 else
-    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^:\r\n]+')
+    export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '((?<=\[)[a-f0-9:]+(?=\]:\d+\s*$))|([^\s\[\]]+)(?=:\d+\s*$)')
 fi
 
 if [[ -n "${VPN_REMOTE}" ]]; then
