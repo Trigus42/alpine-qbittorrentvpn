@@ -108,9 +108,9 @@ else
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=\s)\d{2,5}(?=\s)?+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^#;]*\s\K\d{2,5}(?=\s*$)')
 else
-    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=:)\d{2,5}(?=:)?+')
+    export VPN_PORT=$(echo "${vpn_remote_line}" | grep -o -m 1 -P '^[^#]*:\K\d{2,5}(?=\s*$)')
 fi
 
 if [[ -n "${VPN_PORT}" ]]; then
