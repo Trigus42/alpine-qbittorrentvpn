@@ -105,9 +105,14 @@ nft "add chain inet firewall output { type filter hook postrouting priority 0 ; 
 ## Input
 
 nft "add rule inet firewall input iifname $VPN_DEVICE_TYPE accept comment \"Accept input from VPN tunnel\""
-nft "add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip saddr @vpn_ipv4 accept comment \"Accept input from VPN server \(IPv4\)\""
-nft "add rule inet firewall input iifname $DOCKER_INTERFACE $VPN_PROTOCOL sport $VPN_PORT ip6 saddr @vpn_ipv6 accept comment \"Accept input from VPN server \(IPv6\)\""
+nft "add rule inet firewall input $VPN_PROTOCOL sport $VPN_PORT ip saddr @vpn_ipv4 accept comment \"Accept input from VPN server \(IPv4\)\""
+nft "add rule inet firewall input $VPN_PROTOCOL sport $VPN_PORT ip6 saddr @vpn_ipv6 accept comment \"Accept input from VPN server \(IPv6\)\""
 nft "add rule inet firewall input iifname lo accept comment \"Accept input from internal loopback\""
+nft "add rule inet firewall input icmpv6 type {nd-neighbor-solicit,nd-neighbor-advert,nd-router-solicit,nd-router-advert} accept comment \"Basic ICMPv6 NDP\""
+nft "add rule inet firewall input icmpv6 type {destination-unreachable, packet-too-big, time-exceeded} accept comment \"Basic ICMPv6 errors (optional)\""
+nft "add rule inet firewall input icmp type {destination-unreachable, time-exceeded} accept comment \"Basic ICMP errors (optional)\""
+nft "add rule inet firewall input icmp type {echo-request} accept comment \"Respond to IPv4 pings (optional)\""
+nft "add rule inet firewall input icmpv6 type {echo-request} accept comment \"Respond to IPv6 pings (optional)\""
 
 # Support deprecated LAN_NETWORK env var
 if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
@@ -153,10 +158,15 @@ fi
 ## Output
 
 nft "add rule inet firewall output oifname $VPN_DEVICE_TYPE accept comment \"Accept output to VPN tunnel\""
-nft "add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip daddr @vpn_ipv4 accept comment \"Accept output to VPN server \(IPv4\)\""
-nft "add rule inet firewall output oifname $DOCKER_INTERFACE $VPN_PROTOCOL dport $VPN_PORT ip6 daddr @vpn_ipv6 accept comment \"Accept output to VPN server \(IPv6\)\""
+nft "add rule inet firewall output $VPN_PROTOCOL dport $VPN_PORT ip daddr @vpn_ipv4 accept comment \"Accept output to VPN server \(IPv4\)\""
+nft "add rule inet firewall output $VPN_PROTOCOL dport $VPN_PORT ip6 daddr @vpn_ipv6 accept comment \"Accept output to VPN server \(IPv6\)\""
 nft "add rule inet firewall output tcp sport 8080 meta mark 8080 counter accept comment \"Accept outgoing packets belonging to a WebUI connection\""
 nft "add rule inet firewall output iifname lo accept comment \"Accept output to internal loopback\""
+nft "add rule inet firewall output icmpv6 type {nd-neighbor-solicit,nd-neighbor-advert,nd-router-solicit,nd-router-advert} accept comment \"Basic ICMPv6 NDP\""
+nft "add rule inet firewall output icmpv6 type {destination-unreachable, packet-too-big, time-exceeded} accept comment \"ICMPv6 errors (optional)\""
+nft "add rule inet firewall output icmp type {destination-unreachable, time-exceeded} accept comment \"ICMP errors (optional)\""
+nft "add rule inet firewall output icmp type {echo-reply} accept comment \"Respond to IPv4 pings (optional)\""
+nft "add rule inet firewall output icmpv6 type {echo-reply} accept comment \"Respond to IPv6 pings (optional)\""
 
 # Additional port list for scripts or container linking
 if [[ -n "$ADDITIONAL_PORTS" ]]; then
