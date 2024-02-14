@@ -63,6 +63,7 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 |`VPN_USERNAME`| If username and password provided, configures all ovpn files automatically |`ad8f64c02a2de`||
 |`WEBUI_ALLOWED_NETWORKS`| Comma delimited networks in CIDR notation. If set, only networks in this list can access the WebUI. |`192.168.0.0/16,fd5e:d5b:760a:4796::/64`||
 |`WEBUI_PASSWORD`| Set WebUI password if none is set (won't change it) |`mypassword`||
+| `BIND_INTERFACE`         | Bind qBittorrent session to VPN interface                                                           |`yes`|`no`| 
 
 ## Volumes
 | Volume | Required | Function | Example |
