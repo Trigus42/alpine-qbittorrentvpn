@@ -86,6 +86,21 @@ elif ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WebUI password not set. To access the WebUI set a password or get a temporary password from the qBittorrent logs."
 fi
 
+# VPN interface binding
+if [[ ${BIND_INTERFACE,,} == 'yes' ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] BIND_INTERFACE defined as ${BIND_INTERFACE}. Setting qBt interface to ${VPN_DEVICE_TYPE}"
+	if ! grep -Exq 'Session\\\Interface=.*' "$qbt_config_path"; then
+		sed -i "/\[BitTorrent\]/a Session\\\Interface=${VPN_DEVICE_TYPE}" "$qbt_config_path"
+	else
+		sed -i -E "s/^Session\\\Interface=.*\$/Session\\\Interface=${VPN_DEVICE_TYPE}/gm" "$qbt_config_path"
+	fi
+	if ! grep -Exq 'Session\\\InterfaceName=.*' "$qbt_config_path"; then
+		sed -i "/\[BitTorrent\]/a Session\\\InterfaceName=${VPN_DEVICE_TYPE}" "$qbt_config_path"
+	else
+		sed -i -E "s/^Session\\\InterfaceName=.*\$/Session\\\InterfaceName=${VPN_DEVICE_TYPE}/gm" "$qbt_config_path"
+	fi
+fi
+
 ##########
 # Save envirnonment variables
 
