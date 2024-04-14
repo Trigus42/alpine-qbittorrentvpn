@@ -13,7 +13,7 @@ jobs:
 
       - name: Download previous release info
         id: download-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           name: qbt-release-info
           workflow_conclusion: success
