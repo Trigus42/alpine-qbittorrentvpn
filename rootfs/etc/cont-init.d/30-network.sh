@@ -19,6 +19,7 @@ nft "add table inet qbt-mark"
 nft "add chain inet qbt-mark prerouting { type filter hook prerouting priority -150 ; }"
 nft "add chain inet qbt-mark output { type route hook output priority -150 ; }"
 nft "add rule inet qbt-mark prerouting tcp dport 8080 ct state new ct mark set 9090 counter comment \"Track new WebUI connections\""
+nft "add rule inet qbt-mark prerouting tcp dport 8080 meta mark set 8080 counter packets 0 bytes 0 comment \"Mark packets to pass rp_filter reverse path route lookup\""
 nft "add rule inet qbt-mark output ct mark 9090 meta mark set 8080 counter comment \"Add mark to outgoing packets belonging to a WebUI connection\""
 
 # Route WebUI traffic over "$DEFAULT_IPV4_GATEWAY"

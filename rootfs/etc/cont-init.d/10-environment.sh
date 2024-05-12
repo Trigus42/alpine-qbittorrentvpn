@@ -116,6 +116,27 @@ if [ -n "$docker_ipv6_ula_cidr" ]; then
 	fi
 fi
 
+##########
+# Reverse path filtering compatibility
+# Required for wg-quick and WebUI PBR
+
+if \
+	# Check if reverse path filtering is set to 1 (strict)
+	( \
+		[ "$(sysctl net.ipv4.conf.all.rp_filter)" == "net.ipv4.conf.all.rp_filter = 1" ] || \
+		[ "$(sysctl net.ipv4.conf.$DOCKER_INTERFACE.rp_filter)" == "net.ipv4.conf.$DOCKER_INTERFACE.rp_filter = 1" ] \
+	) && \
+	# Check if src_valid_mark is disabled
+	( \
+		[ "$(sysctl net.ipv4.conf.all.src_valid_mark)" != "net.ipv4.conf.all.src_valid_mark = 1" ] && \
+		[ "$(sysctl net.ipv4.conf.$DOCKER_INTERFACE.src_valid_mark)" != "net.ipv4.conf.$DOCKER_INTERFACE.src_valid_mark = 1" ] \
+	) && \
+	# Try to enable src_valid_mark
+	! (sysctl -q net.ipv4.conf.$DOCKER_INTERFACE.src_valid_mark=1 >/dev/null 2>&1)
+then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] rp_filter is set to 1 (strict) and src_valid_mark is set to 0 and could not be enabled"
+	stop_container
+fi
 
 ##########
 # PUID/PGID
