@@ -14,15 +14,12 @@ Docker container which runs the latest qBittorrent-nox client while connecting t
 * Build for **amd64**, **arm64**, **armv8** and **armv7**
 * ...
 
-## Software
-* [alpine](https://hub.docker.com/_/alpine) (base image)
-* [qBittorrent](https://github.com/qbittorrent/qBittorrent)
-* [WireGuard](https://www.wireguard.com/) / [OpenVPN](https://github.com/OpenVPN/openvpn)
-* ...
-
 # Run container:
 
-Create a docker compose file or modify one of the [example compose files](examples/compose) to your needs. Then start the container by running:
+* Modify one of the [example compose files](docs/examples/compose) to your needs.
+* [Create the necessary VPN config files](#vpn-configuration).
+
+Then start the container by running:
 
 ```sh
 docker compose up -d
@@ -76,14 +73,6 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 |----------|----------|----------|----------|----------|
 | `8080` | TCP | Yes | qBittorrent WebUI | `8080:8080`|
 
-
-## Default Credentials
-
-| Credential | Default Value |
-|----------|----------|
-|`username`| `admin` |
-|`password`| `adminadmin` |
-
 ## VPN Configuration
 If there are multiple config files present, one will be choosen randomly.
 
@@ -94,7 +83,8 @@ The container will fail to boot if `VPN_ENABLED` is set and there is no valid `I
 [[source]](https://www.man7.org/linux/man-pages/man8/wg-quick.8.html)
 
 ## OpenVPN
-The container will fail to boot if `VPN_ENABLED` is set and there is no valid `FILENAME.ovpn` file present in the `/config/openvpn` directory. Drop a `.ovpn` file from your VPN provider into `/config/openvpn` (if necessary with additional files like certificates) and start the container again.  
+The container will fail to boot if `VPN_ENABLED` is set and there is no valid `FILENAME.ovpn` file present in the `/config/openvpn` directory. Drop a `.ovpn` file from your VPN provider into `/config/openvpn` (if necessary with additional files like certificates) and start the container.  
+
 You can either use the environment variables `VPN_USERNAME` and `VPN_PASSWORD` or store your credentials in `openvpn/credentials.conf`. Those credentials will be used to create credential files for all VPN configs initially. 
 If you manually store your VPN credentials in `openvpn/FILENAME_credentials.conf`, those will be used for the particular VPN config.
 
@@ -114,7 +104,7 @@ id <username>
 # Customization
 Just mount your script to `/etc/cont-init.d/your_script.sh` in the container. The execution order is determined by the number prefix.  
 
-See [examples/scripts](examples/scripts) for examples.  
+See [docs/examples/scripts](docs/examples/scripts) for examples.  
 
 Unfortunately, I can't guarantee that variables used in the default scripts or the execution order stay the same. Please try to make your custom scripts independent of those things.
 
@@ -152,6 +142,8 @@ $ QBITTORRENT_TAG={TAG} docker buildx bake -f bake.yml --builder no_concurrency
 
 When encountering an issue, please first attempt to reproduce it using the most up-to-date stable versions of Docker, your operating system, kernel, and the container itself.
 
+Before opening a new issue, please refer to previously reported issues as well as the [common issues](docs/troubleshooting/common-issues.md). Your issue might have already been addressed, or there may be ongoing discussions that you can join.
+
 Upon opening an issue, kindly provide the following details:
 
 - Full logs from container boot to exit, preferably with the `DEBUG=yes` environment variable set.
@@ -163,7 +155,13 @@ Upon opening an issue, kindly provide the following details:
 
 While logs should not display passwords and keys, it is highly recommended to review them for any sensitive information. Depending on your particular case, you might also want to redact IP addresses and domain names.
 
-Before opening a new issue, please refer to previously reported issues as well as the [Known Issues](https://github.com/Trigus42/alpine-qbittorrentvpn/wiki/Known-Issues) page in the wiki. Your issue might have already been addressed, or there may be ongoing discussions that you can join.
-
 # Credits:
-This image is based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn) which in turn is based off on [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
+
+## Software
+* [alpine](https://hub.docker.com/_/alpine) (base image)
+* [qBittorrent](https://github.com/qbittorrent/qBittorrent)
+* [WireGuard](https://www.wireguard.com/) / [OpenVPN](https://github.com/OpenVPN/openvpn)
+* ...
+
+## Inspiration
+This image was inspired by and is partially based on [DyonR/docker-qbittorrentvpn](https://github.com/DyonR/docker-qbittorrentvpn), [MarkusMcNugen/docker-qBittorrentvpn](https://github.com/MarkusMcNugen/docker-qBittorrentvpn) and [binhex/arch-qbittorrentvpn](https://github.com/binhex/arch-qbittorrentvpn).
