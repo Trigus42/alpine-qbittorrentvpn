@@ -182,13 +182,15 @@ fi
 set -e
 
 if [[ $VPN_ENABLED != "no" ]]; then
+    # Manually create tun device
+    # For OpenVPN this is always necessary when in unprivileged mode
+    # For Wireguard this is necessary on older kernel versions when in unprivileged mode
+    mkdir -p /dev/net
+    if [ ! -c /dev/net/tun ]; then
+        mknod /dev/net/tun c 10 200
+    fi
+    
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-		# Char device is only created in privileged mode; If only cap-add=NET_ADMIN is set we have to create it manually
-		mkdir -p /dev/net
-		if [ ! -c /dev/net/tun ]; then
-			mknod /dev/net/tun c 10 200
-		fi
-
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting OpenVPN..."
         echo "--------------------"
 
