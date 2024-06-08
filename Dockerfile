@@ -70,6 +70,11 @@ RUN \
     # Remove temporary files
     rm -r /tmp/*
 
+ARG SOURCE_COMMIT="UNSPECIFIED"
+RUN \
+    echo "${SOURCE_COMMIT}" > /etc/image-source-commit; \
+    echo "$(date +'%Y-%m-%d %H:%M:%S')" > /etc/image-build-date
+
 VOLUME /config /downloads
 EXPOSE 8080
 

@@ -86,9 +86,10 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" | tee -a $GITHUB_ENV
           echo "VERSION_NUMBER=$(echo $RELEASE_TAG | grep -P "\d(\.\d+)+" -o | head -n 1)" | tee -a $GITHUB_ENV
 
-      - name: Setup date
+      - name: Setup vars
         run: |
           echo "DATE=$(date -u +%Y%m%d)" | tee -a $GITHUB_ENV
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" | tee -a $GITHUB_ENV
 
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push Docker image
@@ -99,6 +100,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            "SOURCE_COMMIT=${{ env.SHORT_SHA }}"
           tags: |
             ghcr.io/trigus42/alpine-qbittorrentvpn:latest
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}
@@ -125,6 +128,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            "SOURCE_COMMIT=${{ env.SHORT_SHA }}"
           tags: |
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}-${{ github.sha }}
@@ -133,7 +138,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
 
       # Sign the resulting Docker image digest except on PRs.
       - name: Sign the published Docker image

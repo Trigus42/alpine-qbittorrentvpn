@@ -4,6 +4,12 @@
 source /scripts/helper/functions.sh
 
 ##########
+# Build info
+
+echo "Image build from commit $(cat /etc/image-source-commit) on $(cat /etc/image-build-date)"
+echo "--------------------"
+
+##########
 # Host network mode?
 
 # Check for presence of network interface docker0
