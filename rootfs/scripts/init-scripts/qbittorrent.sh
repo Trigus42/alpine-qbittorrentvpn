@@ -25,11 +25,7 @@ fi
 
 # The mess down here checks if SSL is enabled.
 if [[ ${ENABLE_SSL,,} == 'yes' ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] ENABLE_SSL is set to ${ENABLE_SSL}"
-	if [[ ${HOST_OS,,} == 'unraid' ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [SYSTEM] If you use Unraid, and get something like a 'ERR_EMPTY_RESPONSE' in your browser, add https:// to the front of the IP, and/or do this:"
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [SYSTEM] Edit this Docker, change the slider in the top right to 'advanced view' and change http to https at the WebUI setting."
-	fi
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] ENABLE_SSL is set to ${ENABLE_SSL}. The container will handle SSL."
 	if [ ! -e /config/qBittorrent/config/WebUICertificate.crt ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] WebUI Certificate is missing, generating a new Certificate and Key"
 		openssl req -new -x509 -nodes -out /config/qBittorrent/config/WebUICertificate.crt -keyout /config/qBittorrent/config/WebUIKey.key -subj "/C=NL/ST=localhost/L=localhost/O=/OU=/CN="
@@ -62,9 +58,6 @@ if [[ ${ENABLE_SSL,,} == 'yes' ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path doesn't have the WebUI\HTTPS\Enabled loaded. Added it to the config."
 		echo 'WebUI\HTTPS\Enabled=true' >> "$qbt_config_path"
 	fi
-else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ENABLE_SSL is set to ${ENABLE_SSL}, SSL is not enabled. This could cause issues with logging if other apps use the same Cookie name (SID)."
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] If you manage the SSL config yourself, you can ignore this."
 fi
 
 # Set the umask

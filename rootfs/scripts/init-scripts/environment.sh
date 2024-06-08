@@ -154,15 +154,19 @@ else
 fi
 
 # Check if the PUID exists, if not create the user with the name 'qbittorrent'
-if [[ "$(getent passwd "$PUID" | cut -d: -f1)" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID already exists in /etc/passwd, nothing to do."
+if [[ "$(getent passwd "$PUID" | cut -d: -f1)" ]] && [[ "$DEBUG" == "yes" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] A user with PUID $PUID already exists in /etc/passwd, nothing to do."
 else
 	if [[ "$(getent passwd "qbittorrent" | cut -d: -f3)" ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID does not exist, changing PUID of user 'qbittorrent' to $PUID"
+		if [[ "$DEBUG" == "yes" ]]; then
+			echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] A user with PUID $PUID does not exist, changing PUID of user 'qbittorrent' to $PUID"
+		fi
 		deluser qbittorrent
 		adduser -D -g qbittorrent -u "$PUID" qbittorrent
 	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] An user with PUID $PUID does not exist, adding an user called 'qbittorrent' with PUID $PUID"
+		if [[ "$DEBUG" == "yes" ]]; then
+			echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] A user with PUID $PUID does not exist, adding an user called 'qbittorrent' with PUID $PUID"
+		fi
 		adduser -D -u "$PUID" qbittorrent
 	fi
 fi
@@ -210,7 +214,7 @@ export NAME_SERVERS
 if [[ -n "${NAME_SERVERS}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] NAME_SERVERS defined as '${NAME_SERVERS}'"
 else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] NAME_SERVERS not defined (via -e NAME_SERVERS), defaulting to CloudFlare and Google name servers"
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] NAME_SERVERS not defined (via -e NAME_SERVERS), defaulting to CloudFlare and Google name servers"
 	export NAME_SERVERS="1.1.1.1,8.8.8.8,1.0.0.1,8.8.4.4"
 fi
 
@@ -222,7 +226,9 @@ for name_server_item in "${name_server_list[@]}"; do
 	# strip whitespace from start and end of name_server_item
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${name_server_item} to resolv.conf"
+	if [[ "$DEBUG" == "yes" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${name_server_item} to resolv.conf"
+	fi
 	echo "nameserver ${name_server_item}" >> /etc/resolv.conf
 done
 

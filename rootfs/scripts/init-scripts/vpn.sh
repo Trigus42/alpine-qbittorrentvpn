@@ -75,7 +75,7 @@ fi
 # Read VPN config
 
 # Convert CRLF (windows) to LF (unix)
-dos2unix "${VPN_CONFIG}" 1> /dev/null
+dos2unix -q "${VPN_CONFIG}"
 
 # Parse values from the ovpn or conf file
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -84,12 +84,12 @@ else
     export vpn_remote_line=$( (grep -o -m 1 -P '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
 fi
 
-if [[ -n "${vpn_remote_line}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
-else
+if [[ -z "${vpn_remote_line}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line:"
     cat "${VPN_CONFIG}"
     stop_container
+elif [[ "$DEBUG" == "yes" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -137,7 +137,7 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
     fi
 else
     export VPN_PROTOCOL="udp"
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}', since WireGuard is always ${VPN_PROTOCOL}."
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}'"
 fi
 
 
