@@ -43,7 +43,6 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 ## Environment Variables
 | Variable | Function | Example | Default |
 |----------|----------|----------|----------|
-|`BIND_INTERFACE`| Bind qBittorrent to VPN interface (recommended) |`yes`|`no`|
 |`DEBUG`| Print information useful for debugging in log |`yes`|`no`|
 |`DOWNLOAD_DIR_CHOWN`| Whether or not to chown files in the `/downloads` directory to PUID and PGID |`no`|`yes`|
 |`ENABLE_SSL`| Let the container handle SSL (yes/no) |`yes`|`no`| 

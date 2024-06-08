@@ -88,8 +88,10 @@ elif ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
 fi
 
 # VPN interface binding
-if [[ ${BIND_INTERFACE,,} == 'yes' ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] BIND_INTERFACE defined as ${BIND_INTERFACE}. Setting qBt interface to ${VPN_DEVICE_TYPE}"
+if [[ ${VPN_ENABLED,,} != 'no' ]]; then
+	if [[ "$DEBUG" == "yes" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Setting qBt bind interface to \"${VPN_DEVICE_TYPE}\""
+	fi
 	if ! grep -Exq 'Session\\Interface=.*' "$qbt_config_path"; then
 		sed -i "/\[BitTorrent\]/a Session\\Interface=${VPN_DEVICE_TYPE}" "$qbt_config_path"
 	else
