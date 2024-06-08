@@ -73,10 +73,6 @@ else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] neither $VPN_REMOTE (VPN_REMOTE) nor \"$VPN_REMOTE_IP\" (obtained from the VPN client) is a valid IP"
 		stop_container
 	fi
-
-	# Get a list of possible IPv4 and IPv6 addresses using DNS
-	# IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
-	# IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
 fi
 
 if [[ "$DEBUG" == "yes" ]]; then
