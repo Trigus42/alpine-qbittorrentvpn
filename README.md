@@ -111,7 +111,6 @@ Unfortunately, I can't guarantee that variables used in the default scripts or t
 # Build it yourself
 &NewLine;
 You can use the `Dockerfile` with all architectures and versions of qBT that are listed [here](https://github.com/userdocs/qbittorrent-nox-static/releases).
-`Dockerfile.compile` should work for all architectures. Release tags can be found [here](https://github.com/qbittorrent/qBittorrent/tags).
 
 If you don't specify any tags, the latest release version will be used.
 
@@ -119,10 +118,7 @@ If you don't specify any tags, the latest release version will be used.
 ```sh
 $ git clone https://github.com/Trigus42/alpine-qbittorrentvpn.git
 $ cd alpine-qbittorrentvpn
-
 $ QBITTORRENT_TAG={TAG} docker build -f Dockerfile -t qbittorrentvpn .
--- OR --
-$ QBITTORRENT_TAG={TAG} docker build -f Dockerfile.compile -t qbittorrentvpn .
 ```
 
 Build for all supported architectures:
@@ -131,12 +127,6 @@ $ QBITTORRENT_TAG={TAG} docker buildx bake -f bake.yml
 ```
 
 If you want to use this command to push the images to a registry (append `--push` to the above command), you have to modify the `image` setting in `bake.yml`.
-
-Compiling for many architectures simultaneously can be very demanding. You can create and use a builder instance with no concurrency using these commands: 
-```sh
-$ docker buildx create --config buildkitd.toml --name no_concurrency
-$ QBITTORRENT_TAG={TAG} docker buildx bake -f bake.yml --builder no_concurrency
-```
 
 # Reporting Issues
 
