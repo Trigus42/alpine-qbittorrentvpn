@@ -29,10 +29,6 @@ Because they depend on the others, it should be enough to check for `nft_ct` and
 `Error: Could not process rule: Invalid argument` [(Issue)](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/50)  
 `netlink: Error: cache initialization failed: Invalid argument` [(Issue)](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/52)  
 
-## Progress lost on restart
-
-This doesn't seem to be an unknown issue with QBt. If you have a temp download directory set in QBt, please try disabling that.
-
 ## Wrong date due to outdated seccomp
 ```sh
 / # date
