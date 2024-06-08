@@ -113,11 +113,6 @@ nft "add rule inet firewall input icmp type {destination-unreachable, time-excee
 nft "add rule inet firewall input icmp type {echo-request} accept comment \"Respond to IPv4 pings (optional)\""
 nft "add rule inet firewall input icmpv6 type {echo-request} accept comment \"Respond to IPv6 pings (optional)\""
 
-# Support deprecated LAN_NETWORK env var
-if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
-	WEBUI_ALLOWED_NETWORKS=$LAN_NETWORK
-fi
-
 # Input to WebUI
 if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
 	nft "add rule inet firewall input tcp dport 8080 counter accept comment \"Accept input to the qBt WebUI\""
