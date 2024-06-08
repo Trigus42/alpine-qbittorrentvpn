@@ -31,7 +31,10 @@ Because they depend on the others, it should be enough to check for `nft_ct` and
 
 ## Progress lost on restart
 
-This doesn't seem to be an unknown issue with QBt. If you have a temp download directory set in QBt, please try disabling that.
+This is a currently ongoing [issue](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/65). As a temporary solution please try:
+
+- Setting `Save resume data interval` in the advanced WebUI settings to `1` minute.
+- Increasing the `HEALTH_CHECK_TIMEOUT` environment variable to `60` seconds.
 
 ## Wrong date due to outdated seccomp
 ```sh
