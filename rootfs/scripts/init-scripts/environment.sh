@@ -1,8 +1,7 @@
-#!/usr/bin/with-contenv bash
-# shellcheck shell=bash
+#!/bin/bash
 
 # shellcheck disable=SC1091
-source /helper/functions.sh
+source /scripts/helper/functions.sh
 
 ##########
 # Host network mode?
