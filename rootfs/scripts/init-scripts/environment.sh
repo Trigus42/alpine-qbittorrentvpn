@@ -24,9 +24,6 @@ fi
 ##########
 # Deprecation warnings
 
-if [[ -n "${LAN_NETWORK}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] LAN_NETWORK is deprecated, might not work in future versions and is no longer needed. Obmit or use WEBUI_ALLOWED_NETWORKS to restrict access instead"
-fi
 if [[ -n "${ADDITIONAL_PORTS}" ]]; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ADDITIONAL_PORTS is deprecated and might not work in future versions. Add a custom firewall script instead"
 fi
@@ -233,7 +230,7 @@ for name_server_item in "${name_server_list[@]}"; do
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
 	if [[ "$DEBUG" == "yes" ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Adding ${name_server_item} to resolv.conf"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Adding ${name_server_item} to resolv.conf"
 	fi
 	echo "nameserver ${name_server_item}" >> /etc/resolv.conf
 done
