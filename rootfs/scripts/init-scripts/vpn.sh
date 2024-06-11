@@ -206,13 +206,13 @@ if [[ $VPN_ENABLED != "no" ]]; then
                     --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             else
                 openvpn \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             fi
         else
@@ -223,14 +223,14 @@ if [[ $VPN_ENABLED != "no" ]]; then
                     --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             else
                 openvpn \
                     --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             fi
         fi
