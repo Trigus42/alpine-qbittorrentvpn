@@ -1,6 +1,7 @@
-#!/usr/bin/with-contenv bash
-# shellcheck shell=bash
+#!/bin/bash
 
+# shellcheck disable=SC1091
+source /scripts/helper/functions.sh
 # Create /config/qBittorrent (if it doesn't exist)
 mkdir -p /config/qBittorrent/config
 
@@ -24,11 +25,7 @@ fi
 
 # The mess down here checks if SSL is enabled.
 if [[ ${ENABLE_SSL,,} == 'yes' ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] ENABLE_SSL is set to ${ENABLE_SSL}"
-	if [[ ${HOST_OS,,} == 'unraid' ]]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [SYSTEM] If you use Unraid, and get something like a 'ERR_EMPTY_RESPONSE' in your browser, add https:// to the front of the IP, and/or do this:"
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [SYSTEM] Edit this Docker, change the slider in the top right to 'advanced view' and change http to https at the WebUI setting."
-	fi
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] ENABLE_SSL is set to ${ENABLE_SSL}. The container will handle SSL."
 	if [ ! -e /config/qBittorrent/config/WebUICertificate.crt ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] WebUI Certificate is missing, generating a new Certificate and Key"
 		openssl req -new -x509 -nodes -out /config/qBittorrent/config/WebUICertificate.crt -keyout /config/qBittorrent/config/WebUIKey.key -subj "/C=NL/ST=localhost/L=localhost/O=/OU=/CN="
@@ -61,9 +58,6 @@ if [[ ${ENABLE_SSL,,} == 'yes' ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] $qbt_config_path doesn't have the WebUI\HTTPS\Enabled loaded. Added it to the config."
 		echo 'WebUI\HTTPS\Enabled=true' >> "$qbt_config_path"
 	fi
-else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] ENABLE_SSL is set to ${ENABLE_SSL}, SSL is not enabled. This could cause issues with logging if other apps use the same Cookie name (SID)."
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] If you manage the SSL config yourself, you can ignore this."
 fi
 
 # Set the umask
@@ -80,15 +74,17 @@ fi
 if [[ -n "${WEBUI_PASSWORD}" ]] && ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Setting WebUI password to WEBUI_PASSWORD"
 	salt="$(dd if=/dev/urandom bs=16 count=1 status=none | base64)"
-	key="$(/helper/dwk "$WEBUI_PASSWORD" "$salt" | head -2 | tail -1)"
+	key="$(/scripts/helper/dwk "$WEBUI_PASSWORD" "$salt" | head -2 | tail -1)"
 	sed -i "/\[Preferences\]/a WebUI\\\Password_PBKDF2=\"@ByteArray($salt:$key)\"" "$qbt_config_path"
 elif ! grep -Exq 'WebUI\\Password_PBKDF2=.+' "$qbt_config_path"; then
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] WebUI password not set. To access the WebUI set a password or get a temporary password from the qBittorrent logs."
 fi
 
 # VPN interface binding
-if [[ ${BIND_INTERFACE,,} == 'yes' ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] BIND_INTERFACE defined as ${BIND_INTERFACE}. Setting qBt interface to ${VPN_DEVICE_TYPE}"
+if [[ ${VPN_ENABLED,,} != 'no' ]]; then
+	if [[ "$DEBUG" == "yes" ]]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Setting qBt bind interface to \"${VPN_DEVICE_TYPE}\""
+	fi
 	if ! grep -Exq 'Session\\Interface=.*' "$qbt_config_path"; then
 		sed -i "/\[BitTorrent\]/a Session\\Interface=${VPN_DEVICE_TYPE}" "$qbt_config_path"
 	else

@@ -3,7 +3,7 @@
 TARGET_ARCH="$(uname -m)"
 
 if [ "$TARGET_ARCH" = "x86_64" ]; then
-    echo "amd64"
+    echo "x86_64"
 elif [ "$TARGET_ARCH" = "armv7l" ]; then
     echo "armhf"
 else

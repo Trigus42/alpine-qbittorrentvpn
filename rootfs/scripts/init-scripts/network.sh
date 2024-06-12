@@ -1,9 +1,7 @@
-#!/usr/bin/with-contenv bash
-# shellcheck shell=bash
+#!/bin/bash
 
 # shellcheck disable=SC1091
-source /helper/functions.sh
-
+source /scripts/helper/functions.sh
 ##########
 # Skip - Only needed if VPN is enabled
 
@@ -75,10 +73,6 @@ else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] neither $VPN_REMOTE (VPN_REMOTE) nor \"$VPN_REMOTE_IP\" (obtained from the VPN client) is a valid IP"
 		stop_container
 	fi
-
-	# Get a list of possible IPv4 and IPv6 addresses using DNS
-	# IFS=$'\n' read -d '' -ra ipv4_addresses <<< "$(dig +short A "$VPN_REMOTE")"
-	# IFS=$'\n' read -d '' -ra ipv6_addresses <<< "$(dig +short AAAA "$VPN_REMOTE")"
 fi
 
 if [[ "$DEBUG" == "yes" ]]; then
@@ -114,11 +108,6 @@ nft "add rule inet firewall input icmpv6 type {destination-unreachable, packet-t
 nft "add rule inet firewall input icmp type {destination-unreachable, time-exceeded} accept comment \"Basic ICMP errors (optional)\""
 nft "add rule inet firewall input icmp type {echo-request} accept comment \"Respond to IPv4 pings (optional)\""
 nft "add rule inet firewall input icmpv6 type {echo-request} accept comment \"Respond to IPv6 pings (optional)\""
-
-# Support deprecated LAN_NETWORK env var
-if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then
-	WEBUI_ALLOWED_NETWORKS=$LAN_NETWORK
-fi
 
 # Input to WebUI
 if [ -z "$WEBUI_ALLOWED_NETWORKS" ]; then

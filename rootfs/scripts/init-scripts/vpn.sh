@@ -1,9 +1,7 @@
-#!/usr/bin/with-contenv bash
-# shellcheck shell=bash
+#!/bin/bash
 
 # shellcheck disable=SC1091
-source /helper/functions.sh
-
+source /scripts/helper/functions.sh
 ##########
 # Skip if VPN is disabled
 
@@ -77,7 +75,7 @@ fi
 # Read VPN config
 
 # Convert CRLF (windows) to LF (unix)
-dos2unix "${VPN_CONFIG}" 1> /dev/null
+dos2unix -q "${VPN_CONFIG}"
 
 # Parse values from the ovpn or conf file
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -86,12 +84,12 @@ else
     export vpn_remote_line=$( (grep -o -m 1 -P '(?<=^Endpoint)(\s{0,})[^\n\r]+' | sed -e 's~^[=\ ]*~~') < "${VPN_CONFIG}")
 fi
 
-if [[ -n "${vpn_remote_line}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
-else
+if [[ -z "${vpn_remote_line}" ]]; then
     echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line:"
     cat "${VPN_CONFIG}"
     stop_container
+elif [[ "$DEBUG" == "yes" ]]; then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN remote line defined as '${vpn_remote_line}'"
 fi
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
@@ -139,7 +137,7 @@ if [[ "${VPN_TYPE}" == "openvpn" ]]; then
     fi
 else
     export VPN_PROTOCOL="udp"
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}', since WireGuard is always ${VPN_PROTOCOL}."
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}'"
 fi
 
 
@@ -208,13 +206,13 @@ if [[ $VPN_ENABLED != "no" ]]; then
                     --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             else
                 openvpn \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             fi
         else
@@ -225,14 +223,14 @@ if [[ $VPN_ENABLED != "no" ]]; then
                     --auth-user-pass /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             else
                 openvpn \
                     --pull-filter ignore "route-ipv6" --pull-filter ignore "ifconfig-ipv6" --pull-filter ignore "tun-ipv6" --pull-filter ignore "redirect-gateway ipv6" --pull-filter ignore "dhcp-option DNS6" \
                     --config "${VPN_CONFIG}" \
                     --script-security 2 \
-                    --route-up /helper/resume-after-connect \
+                    --route-up /scripts/helper/resume-after-connect \
                 | tee /var/log/openvpn.log &
             fi
         fi

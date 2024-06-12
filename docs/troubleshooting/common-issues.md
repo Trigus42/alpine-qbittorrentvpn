@@ -29,13 +29,6 @@ Because they depend on the others, it should be enough to check for `nft_ct` and
 `Error: Could not process rule: Invalid argument` [(Issue)](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/50)  
 `netlink: Error: cache initialization failed: Invalid argument` [(Issue)](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/52)  
 
-## Progress lost on restart
-
-This is a currently ongoing [issue](https://github.com/Trigus42/alpine-qbittorrentvpn/issues/65). As a temporary solution please try:
-
-- Setting `Save resume data interval` in the advanced WebUI settings to `1` minute.
-- Increasing the `HEALTH_CHECK_TIMEOUT` environment variable to `60` seconds.
-
 ## Wrong date due to outdated seccomp
 ```sh
 / # date

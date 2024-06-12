@@ -35,8 +35,10 @@ test_connection () {
 }
 
 stop_container() {
-    s6-svc -k -d /var/run/s6/services/qbittorrent/ >/dev/null 2>&1
-    s6-svc -k -d /var/run/s6/services/healthcheck/ >/dev/null 2>&1
+    s6-svc -k -d /run/service/service-qbittorrent/ >/dev/null 2>&1
+    s6-svc -k -d /run/service/service-healthcheck/ >/dev/null 2>&1
+
+    # Killing the service doesn't kill the qbittorrent-nox child process
     killall qbittorrent-nox >/dev/null 2>&1
 
     sleep infinity

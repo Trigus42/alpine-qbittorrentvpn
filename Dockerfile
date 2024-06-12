@@ -40,11 +40,13 @@ RUN \
 
 COPY ./build/build-scripts /tmp/build-scripts
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
-ARG S6_OVERLAY_TAG="v2.2.0.3"
+ARG S6_OVERLAY_TAG="v3.2.0.0"
 RUN \
     # Install s6-overlay
-    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build-scripts/s6-overlay-arch).tar.gz -O /tmp/s6_overlay.tar.gz && \
-    tar -xf /tmp/s6_overlay.tar.gz -C /
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build-scripts/s6-overlay-arch).tar.xz -O /tmp/s6_overlay.tar.xz && \
+    wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-noarch.tar.xz -O /tmp/s6_overlay-noarch.tar.xz && \
+    tar -C / -Jxpf /tmp/s6_overlay.tar.xz && \
+    tar -C / -Jxpf /tmp/s6_overlay-noarch.tar.xz 
 
 ARG QBITTORRENT_TAG
 RUN \
@@ -58,13 +60,18 @@ COPY rootfs /
 RUN \
     # Add go binaries from go-builder stage
     --mount=type=bind,from=go-builder,src=/app/,dst=/mnt/go-builder/ \
-    cp /mnt/go-builder/dwk /helper/dwk
+    cp /mnt/go-builder/dwk /scripts/helper/dwk
 
 RUN \ 
     # Set exec permissions
-    chmod +x -R /helper/ /etc/cont-init.d/ /etc/services.d/ && \
+    chmod +x -R /scripts/ /etc/s6-overlay && \
     # Remove temporary files
     rm -r /tmp/*
+
+ARG SOURCE_COMMIT="UNSPECIFIED"
+RUN \
+    echo "${SOURCE_COMMIT}" > /etc/image-source-commit; \
+    echo "$(date +'%Y-%m-%d %H:%M:%S')" > /etc/image-build-date
 
 VOLUME /config /downloads
 EXPOSE 8080
