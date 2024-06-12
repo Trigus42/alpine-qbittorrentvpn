@@ -26,26 +26,16 @@ fi
 
 while :; do
     # Check if HEALTH_CHECK_HOST is reachable
-    start_time=$(date +%s)
-    if ! ping_output=$(ping -c 1 "$HEALTH_CHECK_HOST" 2>&1); then
-        echo "$(date +'%Y-%m-%d %H:%M:%S') [NOTICE] Network seems to be down. Retrying.."
-        while :; do
-            if [[ "$DEBUG" == "yes" ]]; then
-                echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Last failed ping:"
-                echo "--------------------"
-                echo "$ping_output"
-                echo "--------------------"
-            fi
-            if [[ "$(date +%s) - $start_time" -lt $HEALTH_CHECK_TIMEOUT ]]; then
-                if ping_output=$(ping -c 1 "$HEALTH_CHECK_HOST" 2>&1); then
-                    echo "$(date +'%Y-%m-%d %H:%M:%S') [NOTICE] Network connection restored"
-                    break
-                fi
-            else
-                echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
-                exit 1
-            fi
-        done
+    if ! ping_output=$(ping -c 1 -w "$HEALTH_CHECK_TIMEOUT" "$HEALTH_CHECK_HOST" 2>&1); then
+        if [[ "$DEBUG" == "yes" ]]; then
+            echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Last failed ping:"
+            echo "--------------------"
+            echo "$ping_output"
+            echo "--------------------"
+        fi
+
+        echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Network is down. Exiting.."
+        exit 1
     fi
 
     sleep "${HEALTH_CHECK_INTERVAL}"
