@@ -49,6 +49,7 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 |`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`8.8.8.8`|`1.1.1.1`|
 |`HEALTH_CHECK_INTERVAL`| Time in seconds that the container waits to see if the VPN and internet connection still work |`5`|`5`|
 |`HEALTH_CHECK_TIMEOUT`| How long to wait for the internet connection to restore before restarting |`30`|`15`|
+|`LEGACY_IPTABLES`| Use legacy iptables instead of nftables |`yes`|`no`|
 |`NAME_SERVERS`| Comma delimited name servers |`1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID to be applied to /config files and /downloads  |`99`|`1000`|
 |`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`99`|`1000`|
