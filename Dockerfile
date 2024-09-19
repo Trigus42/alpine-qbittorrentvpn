@@ -52,7 +52,7 @@ RUN \
 ARG QBITTORRENT_TAG
 RUN \
     # Install qbittorrent-nox
-    if [ -z $QBITTORRENT_TAG ]; then QBT_DL_PATH="latest/download/$(/bin/sh /tmp/build-scripts/qbittorrent-nox-static-arch)-qbittorrent-nox"; else QBT_DL_PATH="download/$QBITTORRENT_TAG/$(/bin/sh /tmp/build/qbittorrent-nox-static-arch)-qbittorrent-nox"; fi && \
+    if [ -z $QBITTORRENT_TAG ]; then QBT_DL_PATH="latest/download/$(/bin/sh /tmp/build-scripts/qbittorrent-nox-static-arch)-qbittorrent-nox"; else QBT_DL_PATH="download/$QBITTORRENT_TAG/$(/bin/sh /tmp/build-scripts/qbittorrent-nox-static-arch)-qbittorrent-nox"; fi && \
     wget -O /bin/qbittorrent-nox "https://github.com/userdocs/qbittorrent-nox-static/releases/$QBT_DL_PATH" && \
     chmod +x /bin/qbittorrent-nox
 
