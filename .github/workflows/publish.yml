@@ -102,6 +102,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           build-args: |
             "SOURCE_COMMIT=${{ env.SHORT_SHA }}"
+            "QBITTORRENT_TAG=${{ env.RELEASE_TAG }}"
           tags: |
             ghcr.io/trigus42/alpine-qbittorrentvpn:latest
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}
@@ -130,6 +131,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           build-args: |
             "SOURCE_COMMIT=${{ env.SHORT_SHA }}"
+            "QBITTORRENT_TAG=${{ env.RELEASE_TAG }}"
           tags: |
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}
             ghcr.io/trigus42/alpine-qbittorrentvpn:${{ github.head_ref || github.ref_name }}-${{ github.sha }}
