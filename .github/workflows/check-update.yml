@@ -1,4 +1,4 @@
-name: Check for qBT update
+name: Check for qBt update
 
 on:
   schedule:
@@ -8,8 +8,9 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Download previous release info
         id: download-artifact
@@ -21,30 +22,25 @@ jobs:
           if_no_artifact_found: warn
 
       - name: Get latest release
-        id: get_release
-        run: |
-          # Fetch release information and extract the release tag
-          RELEASE_TAG=$(curl -s https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
-
-          echo "RELEASE_TAG=$RELEASE_TAG" | tee -a $GITHUB_ENV
-          echo "VERSION_NUMBER=$(echo $RELEASE_TAG | grep -P "\d(\.\d+)+" -o | head -n 1)" | tee -a $GITHUB_ENV
+        id: get-qbt-release
+        uses: ./.github/actions/get-qbt-release
 
       - name: Compare with previous release
-        id: compare_release
+        id: compare-release
         run: |
           # Read the release info from the downloaded artifact
           PREVIOUS_RELEASE=$(cat qbt-release-info 2> /dev/null || echo "NONE")
           echo "PREVIOUS_RELEASE=$PREVIOUS_RELEASE"
 
           # Compare the fetched release tag with the previous release tag
-          if [ "${{ env.RELEASE_TAG }}" != "$PREVIOUS_RELEASE" ]; then
-            echo "RELEASE_CHANGED=true" | tee -a $GITHUB_ENV
+          if [ "${{ steps.get-qbt-release.outputs.release_tag }}" == "$PREVIOUS_RELEASE" ]; then
+            echo release_changed=false | tee -a $GITHUB_OUTPUT
           else
-            echo "RELEASE_CHANGED=false" | tee -a $GITHUB_ENV
+            echo release_changed=true | tee -a $GITHUB_OUTPUT
           fi
 
       - name: Call workflow to build docker image
-        if: env.RELEASE_CHANGED == 'true'
+        if: ${{ steps.compare-release.outputs.release_changed == 'true' }}
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: publish.yml
+          workflow: build.yml

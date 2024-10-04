@@ -1,0 +1,28 @@
+name: sign-docker-image
+
+description: Sign the Docker image using cosign
+
+inputs:
+  digest:
+    type: string
+    description: "The image digest to sign"
+    required: true
+  tags:
+    type: string
+    description: "The image tags to sign"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install cosign
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.4'
+
+    - name: Sign Docker image
+      env:
+        COSIGN_EXPERIMENTAL: "true"
+      shell: bash
+      run: |
+        echo "${{ inputs.tags }}" | xargs -I {} cosign sign --yes {}@${{ inputs.digest }}

@@ -1,0 +1,117 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches: [ "master" ]
+    tags: [ 'v*.*.*' ]
+    paths:
+      - '.github/workflows/**'
+      - 'rootfs/**'
+      - 'build/**'
+      - 'Dockerfile'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - '.github/workflows/**'
+      - 'rootfs/**'
+      - 'build/**'
+      - 'Dockerfile'
+  workflow_dispatch:
+    inputs:
+      push:
+        description: 'Push image to registry'
+        required: false
+        default: false
+        type: boolean
+      qbt_tag:
+        description: 'qBittorrent tag'
+        required: false
+        type: string
+      docker_tag:
+        description: 'Tag for the docker image'
+        required: false
+        type: string
+      commit_sha:
+        description: 'Commit SHA to checkout. Requires docker_tag.'
+        required: false
+        type: string
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Evaluate run triggers
+        id: triggers
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.push }}" != "true" ]]; then
+            echo "Workflow was manually triggered, but push is disabled. Skipping push."
+          elif [[ -n "${{ inputs.commit_sha }}" && -z "${{ inputs.docker_tag }}" ]]; then
+            echo "commit_sha is set, but docker_tag isn't. Deploying specific commit to default tag is not allowed. Please provide a docker_tag."
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "Pull request event detected. Skipping push."
+          else
+            echo "do_push=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version infos
+        id: version_info
+        uses: ./.github/actions/build-push-info
+        with:
+          qbt_tag: ${{ inputs.qbt_tag }}
+          docker_tag: ${{ inputs.docker_tag }}
+
+      - name: Setup Docker
+        uses: ./.github/actions/docker-setup
+        with:
+          login_enabled: ${{ steps.triggers.outputs.do_push == 'true' }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+            trigus42/qbittorrentvpn
+
+      - name: Checkout custom commit before building
+        uses: actions/checkout@v4
+        if: ${{ inputs.commit_sha }}
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+          push: ${{ steps.triggers.outputs.do_push == 'true' }}
+          build-args: |
+            "SOURCE_COMMIT=${{ steps.version_info.outputs.short_sha }}"
+            "QBITTORRENT_TAG=${{ steps.version_info.outputs.qbt_release_tag }}"
+          tags: ${{ steps.version_info.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Checkout back to current commit
+        if: ${{ inputs.commit_sha }}
+        run: git checkout ${{ github.sha }}
+
+      - name: Sign Docker image
+        if: ${{ steps.triggers.outputs.do_push == 'true' }}
+        uses: ./.github/actions/sign-docker-image
+        with:
+          digest: ${{ steps.build.outputs.digest }}
+          tags: ${{ steps.version_info.outputs.tags }}

@@ -1,0 +1,78 @@
+name: build-push-info
+
+description: Get docker tags and other version related infos
+
+inputs:
+  qbt_tag:
+    description: "qBittorrent release tag"
+    required: false
+  docker_tag:
+    description: "docker tag"
+    required: false
+
+outputs:
+  qbt_release_tag:
+    description: "The qBittorrent release tag"
+    value: ${{ steps.qbt-release.outputs.release_tag }}
+  qbt_version_number:
+    description: "The extracted version number from the release tag"
+    value: ${{ steps.qbt-release.outputs.version_number }}
+  date:
+    description: "Current UTC date in YYYYMMDD format"
+    value: ${{ steps.env-info.outputs.date }}
+  short_sha:
+    description: "Short SHA of the current commit"
+    value: ${{ steps.env-info.outputs.short_sha }}
+  tags:
+    description: "Docker tags to publish"
+    value: ${{ steps.docker-tags.outputs.tags }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get latest release or use provided tag
+      id: qbt-release
+      uses: ./.github/actions/get-qbt-release
+      with:
+        qbt_tag: ${{ inputs.qbt_tag }}
+
+    - name: Setup additional environment variables
+      id: env-info
+      shell: bash
+      run: |
+        echo "date=$(date -u +%Y%m%d)" | tee -a $GITHUB_OUTPUT
+        echo "short_sha=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
+
+    - name: Set up Docker Tags
+      id: docker-tags
+      shell: bash
+      run: |
+        GHCR_REPO="ghcr.io/trigus42/alpine-qbittorrentvpn"
+        DOCKERHUB_REPO="trigus42/qbittorrentvpn"
+
+        if [[ -n "${{ inputs.docker_tag }}" ]]; then
+          TAGS_NAMES=(
+            ${{ inputs.docker_tag }}
+          )
+        elif [ "${{ github.ref_name }}" == "master" ]; then
+          TAGS_NAMES=(
+            "latest"
+            "qbt${{ steps.qbt-release.outputs.version_number }}"
+            "qbt${{ steps.qbt-release.outputs.version_number }}-${{ steps.env-info.outputs.date }}"
+          )
+        fi
+
+        TAGS_NAMES+=(
+          "${{ github.head_ref || github.ref_name }}"
+          "${{ github.sha }}"
+          "${{ github.sha }}-qbt${{ steps.qbt-release.outputs.version_number }}"
+        )
+
+        # Prepare the tags for both repositories
+        DOCKER_TAGS=()
+        for tag in "${TAGS_NAMES[@]}"; do
+          DOCKER_TAGS+=("$GHCR_REPO:$tag")
+          DOCKER_TAGS+=("$DOCKERHUB_REPO:$tag")
+        done
+
+        bash .github/helper/setOutput.sh "tags" "$(IFS=$'\n'; echo "${DOCKER_TAGS[*]}")"

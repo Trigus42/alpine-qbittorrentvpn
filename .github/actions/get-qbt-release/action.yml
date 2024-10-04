@@ -1,0 +1,32 @@
+name: get-qbt-release
+
+description: Get latest qbt release tag
+
+inputs:
+  qbt_tag:
+    description: "qBittorrent release tag"
+    required: false
+
+outputs:
+  release_tag:
+    description: "The qBittorrent release tag"
+    value: ${{ steps.qbt-release.outputs.release_tag }}
+  version_number:
+    description: "The extracted version number from the release tag"
+    value: ${{ steps.qbt-release.outputs.version_number }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get latest release or use provided tag
+      id: qbt-release
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.qbt_tag }}"]; then
+          echo "No qBittorrent tag provided, fetching latest release..."
+          RELEASE_TAG=$(curl -s https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
+        else
+          RELEASE_TAG=${{ inputs.qbt_tag }}
+        fi
+        echo "release_tag=$RELEASE_TAG" | tee -a $GITHUB_OUTPUT
+        echo "version_number=$(echo $RELEASE_TAG | grep -P "\d(\.\d+)+" -o | head -n 1)" | tee -a $GITHUB_OUTPUT
