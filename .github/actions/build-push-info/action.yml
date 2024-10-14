@@ -9,6 +9,9 @@ inputs:
   docker_tag:
     description: "docker tag"
     required: false
+  commit_sha:
+    description: "Commit SHA the image is built from"
+    required: false
 
 outputs:
   qbt_release_tag:
@@ -20,12 +23,12 @@ outputs:
   date:
     description: "Current UTC date in YYYYMMDD format"
     value: ${{ steps.env-info.outputs.date }}
-  short_sha:
-    description: "Short SHA of the current commit"
-    value: ${{ steps.env-info.outputs.short_sha }}
   tags:
     description: "Docker tags to publish"
     value: ${{ steps.docker-tags.outputs.tags }}
+  build_sha_short:
+    description: "Short commit hash the image is built from"
+    value: ${{ steps.env-info.outputs.build_sha_short }}
 
 runs:
   using: "composite"
@@ -41,7 +44,14 @@ runs:
       shell: bash
       run: |
         echo "date=$(date -u +%Y%m%d)" | tee -a $GITHUB_OUTPUT
-        echo "short_sha=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
+        if [[ -n "${{ inputs.commit_sha }}" ]]; then
+          build_sha="${{ inputs.commit_sha }}"
+        else
+          build_sha=$(git rev-parse HEAD)
+        fi
+
+        echo "build_sha=$build_sha" | tee -a $GITHUB_OUTPUT
+        echo "build_sha_short=${build_sha:0:7}" | tee -a $GITHUB_OUTPUT
 
     - name: Set up Docker Tags
       id: docker-tags
@@ -50,22 +60,35 @@ runs:
         GHCR_REPO="ghcr.io/trigus42/alpine-qbittorrentvpn"
         DOCKERHUB_REPO="trigus42/qbittorrentvpn"
 
+        TAGS_NAMES=()
+
+        # Check if a tag is provided
         if [[ -n "${{ inputs.docker_tag }}" ]]; then
-          TAGS_NAMES=(
-            ${{ inputs.docker_tag }}
+          TAGS_NAMES+=(
+            "${{ inputs.docker_tag }}"
+            "${{ inputs.docker_tag }}-${{ steps.env-info.outputs.build_sha }}"
+            "${{ inputs.docker_tag }}-${{ steps.env-info.outputs.build_sha }}-qbt${{ steps.qbt-release.outputs.version_number }}"
           )
-        elif [ "${{ github.ref_name }}" == "master" ]; then
-          TAGS_NAMES=(
-            "latest"
-            "qbt${{ steps.qbt-release.outputs.version_number }}"
-            "qbt${{ steps.qbt-release.outputs.version_number }}-${{ steps.env-info.outputs.date }}"
+        # Check if no custom commit SHA is provided
+        elif [[ -z "${{ inputs.commit_sha }}" ]]; then
+          # Master branch gets extra tags
+          if [[ "${{ github.ref_name }}" == "master" ]]; then
+            TAGS_NAMES+=(
+              "latest"
+              "qbt${{ steps.qbt-release.outputs.version_number }}"
+              "qbt${{ steps.qbt-release.outputs.version_number }}-${{ steps.env-info.outputs.date }}" # Legacy tag
+            )
+          fi
+
+          TAGS_NAMES+=(
+            "${{ github.head_ref || github.ref_name }}"
+            "${{ github.head_ref || github.ref_name }}-qbt${{ steps.qbt-release.outputs.version_number }}"
           )
         fi
 
         TAGS_NAMES+=(
-          "${{ github.head_ref || github.ref_name }}"
-          "${{ github.sha }}"
-          "${{ github.sha }}-qbt${{ steps.qbt-release.outputs.version_number }}"
+          "${{ steps.env-info.outputs.build_sha }}"
+          "${{ steps.env-info.outputs.build_sha }}-qbt${{ steps.qbt-release.outputs.version_number }}"
         )
 
         # Prepare the tags for both repositories

@@ -32,7 +32,7 @@ on:
         required: false
         type: string
       commit_sha:
-        description: 'Commit SHA to checkout. Requires docker_tag.'
+        description: 'Commit SHA to checkout'
         required: false
         type: string
 
@@ -50,8 +50,6 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.push }}" != "true" ]]; then
             echo "Workflow was manually triggered, but push is disabled. Skipping push."
-          elif [[ -n "${{ inputs.commit_sha }}" && -z "${{ inputs.docker_tag }}" ]]; then
-            echo "commit_sha is set, but docker_tag isn't. Deploying specific commit to default tag is not allowed. Please provide a docker_tag."
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "Pull request event detected. Skipping push."
           else
@@ -67,6 +65,7 @@ jobs:
         with:
           qbt_tag: ${{ inputs.qbt_tag }}
           docker_tag: ${{ inputs.docker_tag }}
+          commit_sha: ${{ inputs.commit_sha }}
 
       - name: Setup Docker
         uses: ./.github/actions/docker-setup
@@ -98,7 +97,7 @@ jobs:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ steps.triggers.outputs.do_push == 'true' }}
           build-args: |
-            "SOURCE_COMMIT=${{ steps.version_info.outputs.short_sha }}"
+            "SOURCE_COMMIT=${{ steps.version_info.outputs.build_sha_short }}"
             "QBITTORRENT_TAG=${{ steps.version_info.outputs.qbt_release_tag }}"
           tags: ${{ steps.version_info.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

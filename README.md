@@ -33,10 +33,8 @@ docker compose up -d
 |----------|----------|
 | `trigus42/qbittorrentvpn:latest` | The latest image with the most recent version of qBittorrent |
 | `trigus42/qbittorrentvpn:qbtx.x.x` | Image with qBittorrent version x.x.x |
-| `trigus42/qbittorrentvpn:qbtx.x.x-YYYYMMDD` | Image built on YYYYMMDD with qBittorrent version x.x.x |
 | `trigus42/qbittorrentvpn:COMMIT-HASH` | Image built from the commit with corresponding SHA hash |
 | `trigus42/qbittorrentvpn:COMMIT-HASH-qbtx.x.x` | Image built from the commit with corresponding SHA hash and qBittorrent version x.x.x |
-| `trigus42/qbittorrentvpn:BRANCH` | Image build from the corresponding branch |
 
 WARNING: Only with the `latest` tag will you continuously receive updates.
 
