@@ -20,7 +20,10 @@ on:
     inputs:
       push:
         description: 'Push image to registry'
-        required: false
+        default: false
+        type: boolean
+      update_artifact:
+        description: 'Update last build version info'
         default: false
         type: boolean
       qbt_tag:
@@ -114,3 +117,15 @@ jobs:
         with:
           digest: ${{ steps.build.outputs.digest }}
           tags: ${{ steps.version_info.outputs.tags }}
+
+      - name: Store qBt version
+        if: ${{ steps.triggers.outputs.do_push == 'true' && inputs.update_artifact != 'false' }}
+        run: |
+          echo "${{ steps.version_info.outputs.qbt_release_tag }}" | tee -a qbt-release-info
+
+      - name: Upload artifacts
+        if: ${{ steps.triggers.outputs.do_push == 'true' && inputs.update_artifact != 'false' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: qbt-release-info
+          path: qbt-release-info

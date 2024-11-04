@@ -18,7 +18,7 @@ jobs:
         with:
           name: qbt-release-info
           workflow_conclusion: success
-          workflow: publish.yml
+          workflow: build.yml
           if_no_artifact_found: warn
 
       - name: Get latest release
@@ -44,3 +44,4 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: build.yml
+          inputs: '{ "push": true, "update_artifact": true }'
