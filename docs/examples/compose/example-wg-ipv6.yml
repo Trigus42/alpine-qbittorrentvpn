@@ -1,5 +1,3 @@
-version: "3.3"
-
 services:
   qbittorrent:
     image: trigus42/qbittorrentvpn
