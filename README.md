@@ -42,12 +42,13 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 | Variable | Function | Example | Default |
 |----------|----------|----------|----------|
 |`DEBUG`| Print information useful for debugging in log |`yes`|`no`|
-|`DOWNLOAD_DIR_CHOWN`| Whether or not to chown files in the `/downloads` directory to PUID and PGID |`no`|`yes`|
-|`ENABLE_SSL`| Let the container handle SSL (yes/no) |`yes`|`no`| 
-|`HEALTH_CHECK_HOST`| This is the host or IP that the healthcheck script will use to check an active connection |`8.8.8.8`|`1.1.1.1`|
-|`HEALTH_CHECK_INTERVAL`| Time in seconds that the container waits to see if the VPN and internet connection still work |`5`|`5`|
-|`HEALTH_CHECK_TIMEOUT`| How long to wait for the internet connection to restore before restarting |`30`|`15`|
-|`LEGACY_IPTABLES`| Use legacy iptables instead of nftables |`yes`|`no`|
+|`DOWNLOAD_DIR_CHOWN`| Whether or not to chown files in the `/downloads` directory to `PUID` and `PGID` |`no`|`yes`|
+|`ENABLE_SSL`| Let the container handle SSL |`yes`|`no`|
+|`FIREWALL_CHECK_HOST`| Host or IP that will be used to check if the firewall can be bypassed | `8.8.8.8` | `8.8.8.8`|
+|`HEALTH_CHECK_HOST`| Host or IP that will be used to check if the connection is still up |`8.8.8.8`|`1.1.1.1`|
+|`HEALTH_CHECK_INTERVAL`| Interval in seconds between connection checks |`5`|`5`|
+|`HEALTH_CHECK_TIMEOUT`| Time in seconds to wait for the internet connection to be restored before restarting |`30`|`15`|
+|`LEGACY_IPTABLES`| Use iptables instead of nftables for legacy systems |`yes`|`no`|
 |`NAME_SERVERS`| Comma delimited name servers |`1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID to be applied to /config files and /downloads  |`99`|`1000`|
 |`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`99`|`1000`|

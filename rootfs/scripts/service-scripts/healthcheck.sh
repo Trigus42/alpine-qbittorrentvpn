@@ -10,13 +10,13 @@ done
 qbittorrentpid=$(pgrep -o qbittorrent-nox)
 echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] qBittorrent started with PID $qbittorrentpid"
 
-## Run
+## Run health and firewall checks in parallel
 
 if [[ $VPN_ENABLED != "no" ]]; then
     ( while :; do
         if [[ $VPN_ENABLED != "no" ]]; then
             # Check if it is possible to bypass the VPN
-            if (ping -I "$DOCKER_INTERFACE" -c 1 "$HEALTH_CHECK_HOST" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1); then
+            if (ping -I "$DOCKER_INTERFACE" -c 1 "$HEALTH_CHECK_HOST" > /dev/null 2>&1) || (ping -I "$DOCKER_INTERFACE" -c 1 "$FIREWALL_CHECK_HOST" > /dev/null 2>&1); then
                 echo "$(date +'%Y-%m-%d %H:%M:%S') [ERROR] Firewall is down! Killing qBittorrent!"
                 stop_container
             fi

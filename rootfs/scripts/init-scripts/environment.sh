@@ -36,28 +36,31 @@ if [[ -n "${WEBUI_ALLOWED_NETWORKS}" ]]; then
 fi
 
 #########
-# Healthcheck
+# Health and firewall check
 
-DEFAULT_HOST="1.1.1.1"
-DEFAULT_INTERVAL=5
-DEFAULT_TIMEOUT=15
+DEFAULT_FIREWALL_CHECK_HOST="8.8.8.8"
+DEFAULT_HEALTH_CHECK_HOST="1.1.1.1"
+DEFAULT_HEALTH_CHECK_INTERVAL=5
+DEFAULT_HEALTH_CHECK_TIMEOUT=15
 
-# If HEALTH_CHECK_HOST is zero (not set) use DEFAULT_HOST
 if [[ -z "${HEALTH_CHECK_HOST}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_HOST is not set. Using default host ${DEFAULT_HOST}"
-    HEALTH_CHECK_HOST=${DEFAULT_HOST}
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_HOST is not set. Using default host ${DEFAULT_HEALTH_CHECK_HOST}"
+    HEALTH_CHECK_HOST=${DEFAULT_HEALTH_CHECK_HOST}
 fi
 
-# If HEALTH_CHECK_INTERVAL is zero (not set) use DEFAULT_INTERVAL
 if [[ -z "${HEALTH_CHECK_INTERVAL}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_INTERVAL is not set. Using default interval of ${DEFAULT_INTERVAL}s"
-    HEALTH_CHECK_INTERVAL=${DEFAULT_INTERVAL}
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_INTERVAL is not set. Using default interval of ${DEFAULT_HEALTH_CHECK_INTERVAL}s"
+    HEALTH_CHECK_INTERVAL=${DEFAULT_HEALTH_CHECK_INTERVAL}
 fi
 
-# If HEALTH_CHECK_TIMEOUT is zero (not set) use DEFAULT_TIMEOUT
 if [[ -z "${HEALTH_CHECK_TIMEOUT}" ]]; then
-    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_TIMEOUT is not set. Using default interval of ${DEFAULT_TIMEOUT}s"
-    HEALTH_CHECK_TIMEOUT=${DEFAULT_TIMEOUT}
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] HEALTH_CHECK_TIMEOUT is not set. Using default interval of ${DEFAULT_HEALTH_CHECK_TIMEOUT}s"
+    HEALTH_CHECK_TIMEOUT=${DEFAULT_HEALTH_CHECK_TIMEOUT}
+fi
+
+if [[ -z "${FIREWALL_CHECK_HOST}" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] FIREWALL_CHECK_HOST is not set. Using default host ${DEFAULT_FIREWALL_CHECK_HOST}"
+	FIREWALL_CHECK_HOST=${DEFAULT_FIREWALL_CHECK_HOST}
 fi
 
 ##########
@@ -240,7 +243,20 @@ done
 
 CONT_INIT_ENV="/var/run/s6/container_environment"
 mkdir -p $CONT_INIT_ENV
-export_vars=("DOCKER_INTERFACE" "DOCKER_IPV4_NETWORK_CIDR" "DOCKER_IPV6_ULA_NETWORK_CIDR" "DEFAULT_IPV4_GATEWAY" "DEFAULT_IPV6_GATEWAY" "PUID" "PGID" "VPN_TYPE" "HEALTH_CHECK_HOST" "HEALTH_CHECK_INTERVAL" "HEALTH_CHECK_TIMEOUT")
+export_vars=(
+	"DOCKER_INTERFACE" 
+	"DOCKER_IPV4_NETWORK_CIDR" 
+	"DOCKER_IPV6_ULA_NETWORK_CIDR" 
+	"DEFAULT_IPV4_GATEWAY" 
+	"DEFAULT_IPV6_GATEWAY" 
+	"PUID" 
+	"PGID" 
+	"VPN_TYPE" 
+	"FIREWALL_CHECK_HOST" 
+	"HEALTH_CHECK_HOST" 
+	"HEALTH_CHECK_INTERVAL" 
+	"HEALTH_CHECK_TIMEOUT"
+)
 
 for name in "${export_vars[@]}"; do
 	echo -n "${!name}" > "$CONT_INIT_ENV/$name"

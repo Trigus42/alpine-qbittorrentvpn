@@ -37,10 +37,10 @@ fi
 
 # Check if it is possible to bypass the VPN
 if [[ $VPN_ENABLED != "no" ]]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Trying to ping 1.1.1.1 and 8.8.8.8 over the docker interface for 1 second..."
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Trying to ping $HEALTH_CHECK_HOST and $FIREWALL_CHECK_HOST over the docker interface for 1 second..."
 
-	ping_1=$(ping -w 1 -I "$DOCKER_INTERFACE" -c 1 "1.1.1.1" > /dev/null 2>&1; echo $? &)
-	ping_2=$(ping -w 1 -I "$DOCKER_INTERFACE" -c 1 "8.8.8.8" > /dev/null 2>&1; echo $? &)
+	ping_1=$(ping -w 1 -I "$DOCKER_INTERFACE" -c 1 "$HEALTH_CHECK_HOST" > /dev/null 2>&1; echo $? &)
+	ping_2=$(ping -w 1 -I "$DOCKER_INTERFACE" -c 1 "$FIREWALL_CHECK_HOST" > /dev/null 2>&1; echo $? &)
 	wait
 
 	if [[ "$ping_1" == "0" ]] || [[ "$ping_2" == "0" ]]; then
