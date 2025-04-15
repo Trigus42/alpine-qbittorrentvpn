@@ -1,4 +1,4 @@
-FROM alpine:3.19 as go-builder
+FROM golang:alpine as go-builder
 
 RUN apk add --no-cache go
 
