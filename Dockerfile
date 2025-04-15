@@ -10,7 +10,7 @@ RUN \
     CGO_ENABLED=0 GOOS=linux go build -o ./dwk
 
 
-FROM alpine:3.19
+FROM alpine:3.21
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
