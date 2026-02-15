@@ -59,8 +59,21 @@ runs:
       run: |
         GHCR_REPO="ghcr.io/trigus42/alpine-qbittorrentvpn"
         DOCKERHUB_REPO="trigus42/qbittorrentvpn"
+        RAW_REF_NAME="${{ github.head_ref || github.ref_name }}"
 
         TAGS_NAMES=()
+
+        # Docker tags only support [A-Za-z0-9_.-] and must not start with '.' or '-'.
+        # Dependabot branch names contain '/', so sanitize refs before using them as tags.
+        SAFE_REF_NAME=$(echo "$RAW_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's|[^a-z0-9_.-]+|-|g; s|[-.]{2,}|-|g; s|^[.-]+||; s|[.-]+$||')
+        SAFE_REF_NAME="${SAFE_REF_NAME:0:128}"
+        if [[ -z "$SAFE_REF_NAME" ]]; then
+          SAFE_REF_NAME="ref"
+        fi
+        if [[ ! "$SAFE_REF_NAME" =~ ^[a-z0-9_] ]]; then
+          SAFE_REF_NAME="r${SAFE_REF_NAME}"
+          SAFE_REF_NAME="${SAFE_REF_NAME:0:128}"
+        fi
 
         # Check if a tag is provided
         if [[ -n "${{ inputs.docker_tag }}" ]]; then
@@ -81,8 +94,8 @@ runs:
           fi
 
           TAGS_NAMES+=(
-            "${{ github.head_ref || github.ref_name }}"
-            "${{ github.head_ref || github.ref_name }}-qbt${{ steps.qbt-release.outputs.version_number }}"
+            "$SAFE_REF_NAME"
+            "${SAFE_REF_NAME}-qbt${{ steps.qbt-release.outputs.version_number }}"
           )
         fi
 
