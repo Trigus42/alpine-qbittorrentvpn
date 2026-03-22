@@ -218,6 +218,7 @@ NAME_SERVERS=$(echo "${NAME_SERVERS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 export NAME_SERVERS
 
 if [[ -n "${NAME_SERVERS}" ]]; then
+	echo "$(date +'%Y-%m-%d %H:%M:%S') [WARN] NAME_SERVERS is deprecated. Prefer Docker --dns / Compose dns: / Kubernetes dnsConfig. Editing /etc/resolv.conf inside the container may be unreliable in Kubernetes. Support will be removed in a future release."
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] NAME_SERVERS defined as '${NAME_SERVERS}'"
 else
 	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] NAME_SERVERS not defined (via -e NAME_SERVERS), defaulting to CloudFlare and Google name servers"

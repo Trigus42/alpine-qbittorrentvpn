@@ -49,7 +49,6 @@ WARNING: Only with the `latest` tag will you continuously receive updates.
 |`HEALTH_CHECK_INTERVAL`| Interval in seconds between connection checks |`5`|`5`|
 |`HEALTH_CHECK_TIMEOUT`| Time in seconds to wait for the internet connection to be restored before restarting |`30`|`15`|
 |`LEGACY_IPTABLES`| Use iptables instead of nftables for legacy systems |`yes`|`no`|
-|`NAME_SERVERS`| Comma delimited name servers |`1.1.1.1,1.0.0.1`|`1.1.1.1,1.0.0.1`|
 |`PGID`| GID to be applied to /config files and /downloads  |`99`|`1000`|
 |`PUID`| UID that qBt will be run as and to be applied to /config files and /downloads |`99`|`1000`|
 |`TZ`| Specify a timezone to use |`Europe/London`|`UTC`|
