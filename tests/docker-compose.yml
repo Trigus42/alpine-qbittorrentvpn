@@ -1,0 +1,47 @@
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wg-server
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - SERVERURL=wireguard
+      - SERVERPORT=51820
+      - PEERS=1
+      - PEERDNS=1.1.1.1
+      - INTERNAL_SUBNET=10.13.13.0
+      - ALLOWEDIPS=0.0.0.0/0
+      - LOG_CONFS=false
+    volumes:
+      - ./wg-config:/config
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      - test-net
+
+  qbittorrentvpn:
+    image: qbittorrentvpn:test
+    container_name: qbt-test
+    environment:
+      - VPN_TYPE=wireguard
+      - WEBUI_PASSWORD=testpassword123
+    volumes:
+      - ./qbt-config:/config
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    ports:
+      - 127.0.0.1:8080:8080
+    restart: "no"
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge

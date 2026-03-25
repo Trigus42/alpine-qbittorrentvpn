@@ -1,2 +1,4 @@
 .vscode
 config
+tests/wg-config/
+tests/qbt-config/
