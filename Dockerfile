@@ -40,7 +40,7 @@ RUN \
 
 COPY ./build/build-scripts /tmp/build-scripts
 # You can find the available release tags at https://github.com/just-containers/s6-overlay/releases
-ARG S6_OVERLAY_TAG="v3.2.0.0"
+ARG S6_OVERLAY_TAG="v3.2.2.0"
 RUN \
     # Install s6-overlay
     wget https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_TAG}/s6-overlay-$(/bin/sh /tmp/build-scripts/s6-overlay-arch).tar.xz -O /tmp/s6_overlay.tar.xz && \
