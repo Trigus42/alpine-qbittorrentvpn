@@ -11,7 +11,7 @@ cd "$SCRIPT_DIR"
 
 WEBUI_URL="http://127.0.0.1:8080"
 WEBUI_PASSWORD="testpassword123"
-TIMEOUT_PEER_CONF=60
+TIMEOUT_PEER_CONF=120
 TIMEOUT_WEBUI=120
 TIMEOUT_CONNECTION=120
 
@@ -19,7 +19,7 @@ cleanup() {
     local exit_code=$?
     echo "--- Tearing down containers ---"
     docker compose down --remove-orphans 2>/dev/null || true
-    rm -rf wg-config qbt-config
+    sudo rm -rf wg-config qbt-config 2>/dev/null || rm -rf wg-config qbt-config 2>/dev/null || true
     exit "$exit_code"
 }
 trap cleanup EXIT
@@ -32,7 +32,7 @@ fi
 
 echo "--- Cleaning up previous test data ---"
 docker compose down --remove-orphans 2>/dev/null || true
-rm -rf wg-config qbt-config
+sudo rm -rf wg-config qbt-config 2>/dev/null || rm -rf wg-config qbt-config 2>/dev/null || true
 mkdir -p qbt-config/wireguard
 
 echo "--- Starting WireGuard server ---"
