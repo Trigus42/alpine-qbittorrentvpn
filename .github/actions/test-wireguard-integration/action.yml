@@ -1,0 +1,27 @@
+name: 'WireGuard Integration E2E Test'
+description: 'Builds test image and runs full WireGuard VPN connectivity integration test.'
+inputs:
+  build_sha_short:
+    description: "Short SHA for build context"
+    required: true
+  qbt_release_tag:
+    description: "qBittorrent release tag for compilation"
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Build AMD64 and load for testing
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        load: true
+        tags: qbittorrentvpn:test
+        build-args: |
+          "SOURCE_COMMIT=${{ inputs.build_sha_short }}"
+          "QBITTORRENT_TAG=${{ inputs.qbt_release_tag }}"
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Run WireGuard E2E connection tests
+      shell: bash
+      run: bash tests/wireguard_e2e.sh

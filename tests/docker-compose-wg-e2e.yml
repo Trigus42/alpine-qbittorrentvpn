@@ -1,0 +1,49 @@
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SERVERURL=wireguard
+      - SERVERPORT=51820
+      - PEERS=1
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.13.13.0
+    ports:
+      - 51820:51820/udp
+    volumes:
+      - wireguard:/config
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+
+  qbittorrentvpn:
+    image: qbittorrentvpn:test
+    container_name: qbittorrentvpn
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - VPN_ENABLED=yes
+      - VPN_TYPE=wireguard
+      - LAN_NETWORK=10.13.13.0/24
+      - WEBUI_PORT=8080
+      - WEBUI_PASSWORD=adminadmin
+    ports:
+      - 8080:8080
+    volumes:
+      - type: volume
+        source: wireguard
+        volume:
+          subpath: peer1/peer1.conf
+        target: /config/wireguard/wg0.conf
+    restart: unless-stopped
+    depends_on:
+      - wireguard
+
+volumes:
+  wireguard:

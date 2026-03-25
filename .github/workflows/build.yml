@@ -92,7 +92,13 @@ jobs:
         with:
           ref: ${{ inputs.commit_sha }}
 
-      - name: Build and push Docker image
+      - name: WireGuard Integration E2E Test
+        uses: ./.github/actions/test-wireguard-integration
+        with:
+          build_sha_short: ${{ steps.version_info.outputs.build_sha_short }}
+          qbt_release_tag: ${{ steps.version_info.outputs.qbt_release_tag }}
+
+      - name: Build and push multi-arch Docker image
         id: build
         uses: docker/build-push-action@v5
         with:
