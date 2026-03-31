@@ -6,6 +6,8 @@ SCRIPTS_DIR="/custom-cont-init.d"
 
 # Make sure custom init directory exists and has files in it
 if [[ -e "${SCRIPTS_DIR}" ]] && [[ -n "$(/bin/ls -A ${SCRIPTS_DIR} 2>/dev/null)" ]]; then
+    echo "[custom-init] WARNING: The /custom-cont-init.d approach is deprecated!"
+    echo "[custom-init] Please migrate your scripts to native s6-rc components in /custom-init or /custom-services."
     echo "[custom-init] Files found, executing"
     for SCRIPT in "${SCRIPTS_DIR}"/*; do
         NAME="$(basename "${SCRIPT}")"

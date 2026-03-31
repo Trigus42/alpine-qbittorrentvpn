@@ -1,0 +1,24 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# ==========================================
+# This is an example of a custom native s6-rc longrun service.
+# If you mount the parent "my-custom-app" directory to /custom-services/my-custom-app
+# inside the container, this script will automatically be tracked and managed by s6.
+#
+# This replaces the old /custom-cont-init.d approach where apps were backgrounded
+# using an & symbol. Here, the process runs directly and is monitored by s6.
+# If it crashes, s6 will automatically restart it.
+# ==========================================
+
+# 1. Provide any necessary dependencies, configurations, or packages.
+# This ensures that whenever the service starts, its required environment exists.
+# We suppress output with -q and use --no-cache to keep things clean.
+echo "[my-custom-app] Ensuring python3 is installed..."
+apk add --no-cache -q python3
+
+# 2. Exec into the foreground process. 
+# It's highly recommended to use 'exec' so your application 
+# takes over the PID 1 of this supervision tree directly.
+echo "[my-custom-app] Starting application..."
+exec python3 /volume/script.py
