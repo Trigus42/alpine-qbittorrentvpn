@@ -3,7 +3,7 @@
 
 # ==========================================
 # This is an example of a custom native s6-rc longrun service.
-# If you mount the parent "my-vpn-port-forward" directory to /custom-services/my-vpn-port-forward
+# If you mount the parent "proton-port-forward" directory to /custom-services/proton-port-forward
 # inside the container, this script will automatically be tracked and managed by s6.
 #
 # Specifically, this script maintains a dynamic port-forwarding lease

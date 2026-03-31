@@ -1,8 +1,11 @@
 #!/command/with-contenv bash
 # shellcheck shell=bash
 
+# ==========================================
 # This is an example of an s6-rc oneshot init script.
-# It only runs once when the container boots! Suitable for installing dependencies.
+# If you mount the parent "my-startup-task" directory to /custom-init/my-startup-task
+# inside the container, this script will run once when the container boots!
+# ==========================================
 
 echo "[Example Init] Installing extra software before anything boots!"
 apk add --no-cache python3

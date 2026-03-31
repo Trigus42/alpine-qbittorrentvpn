@@ -1,6 +1,15 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+# ==========================================
+# This is an example of an s6-rc oneshot init script.
+# If you mount the parent "my-startup-task" directory to /custom-init/my-startup-task
+# inside the container, this script will run once when the container boots!
+#
+# Specifically, this script adds custom nftables rules and routing to route a 
+# specific application's traffic outside of the VPN.
+# ==========================================
+
 set -e
 
 # Required tools
