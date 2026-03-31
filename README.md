@@ -100,8 +100,17 @@ id <username>
 ```
 
 # Customization
-Just mount your script to `/custom-cont-init.d` in the container. Those scripts are executed before any of the default init scripts.
-See [docs/examples/scripts](docs/examples/scripts) for examples.  
+
+For simple initialization setups, you can mount shell scripts directly to `/custom-cont-init.d` within the container. These scripts are executed broadly before default init scripts. 
+See [docs/examples/scripts](docs/examples/scripts).
+
+### Advanced Native s6-rc Extensions
+If you need absolute control over dependency chains, or you want to run long-lived background daemons (like a VPN port forwarding daemon), you can provide native `s6-rc` service directories! 
+
+* **`/custom-init`**: Any valid `s6-rc` component directory placed here will be added to the `init` bundle automatically.
+* **`/custom-services`**: Any valid `s6-rc` component directory placed here will be added to the `user` bundle automatically (run alongside qBittorrent). 
+
+Our hook takes care of linking them. For an example of the structure these folders must have, see [docs/examples/s6-rc](docs/examples/s6-rc).
 
 # Build it yourself
 &NewLine;

@@ -1,0 +1,140 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# ==========================================
+# This is an example of a custom native s6-rc longrun service.
+# If you mount the parent "my-vpn-port-forward" directory to /custom-services/my-vpn-port-forward
+# inside the container, this script will automatically be tracked and managed by s6.
+#
+# Specifically, this script maintains a dynamic port-forwarding lease
+# for ProtonVPN using NAT-PMP. It continuously polls the VPN gateway,
+# extracts the mapped public port, and automatically updates the
+# qBittorrent listening port via its Web API to ensure active connectivity.
+# ==========================================
+
+# ==========================================
+# Configuration (Override via Environment)
+# ==========================================
+UI_PORT="${QBIT_UI_PORT:-8080}"
+GATEWAY="${VPN_GATEWAY:-10.2.0.1}"
+RENEWAL_INTERVAL="${PORT_RENEWAL_INTERVAL:-45}"
+# Leave GOTIFY_WEBHOOK blank to disable notifications entirely
+GOTIFY_URL="${GOTIFY_WEBHOOK:-}" 
+
+# ==========================================
+# Internal Variables
+# ==========================================
+PREV_PORT="0"
+NATPMPC_FAILS=0
+NUM_RE='^[0-9]+$'
+
+# ==========================================
+# Helper Functions
+# ==========================================
+
+log() {
+  echo "[ProtonVPN Port-Forward] $(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
+notify() {
+  # Silently exit if Gotify URL is not configured
+  if [[ -z "$GOTIFY_URL" ]]; then
+    return 0
+  fi
+
+  local title="$1"
+  local message="$2"
+  
+  curl -s -X POST "$GOTIFY_URL" \
+       -F "title=$title" \
+       -F "message=$message" > /dev/null
+}
+
+update_qbittorrent() {
+  local new_port="$1"
+  log "Acquired port $new_port. Updating qBittorrent..."
+  
+  # Capture HTTP status code and body in one command without temp files
+  local response
+  local http_status
+  local body
+
+  response=$(curl -s -w "%{http_code}" \
+       -X POST "http://localhost:${UI_PORT}/api/v2/app/setPreferences" \
+       -d "json={\"listen_port\": ${new_port}}")
+  
+  # Extract status (last 3 chars) and body (everything else)
+  http_status="${response: -3}"
+  body="${response%???}"
+
+  if [[ "$http_status" == "200" ]]; then
+    log "qBittorrent port updated successfully to $new_port!"
+    PREV_PORT="$new_port"
+  else
+    log "ERROR: Update failed! HTTP Status: $http_status. Response: $body"
+  fi
+}
+
+# Graceful exit handler
+cleanup() {
+  log "Received termination signal. Shutting down port-forward loop..."
+  # Kill the background sleep process so it doesn't linger
+  kill "$(jobs -p)" 2>/dev/null
+  exit 0
+}
+trap cleanup SIGINT SIGTERM
+
+# ==========================================
+# Main Execution
+# ==========================================
+
+log "Ensuring dependencies are installed..."
+apk add --no-cache -q libnatpmp curl
+
+log "Waiting for qBittorrent WebUI on port $UI_PORT..."
+while ! curl -s "http://localhost:$UI_PORT" > /dev/null; do
+  sleep 5
+done
+log "qBittorrent is up."
+
+log "Using Gateway: $GATEWAY"
+log "Starting port mapping loop."
+
+while true; do
+  # Request port mapping for UDP and TCP
+  output_udp=$(natpmpc -a 1 0 udp 60 -g "$GATEWAY" 2>/dev/null)
+  output_tcp=$(natpmpc -a 1 0 tcp 60 -g "$GATEWAY" 2>/dev/null)
+
+  # Extract the port numbers
+  port_udp=$(echo "$output_udp" | awk '/Mapped public port/ {print $4}')
+  port_tcp=$(echo "$output_tcp" | awk '/Mapped public port/ {print $4}')
+
+  # Validate both are numbers and match
+  if [[ "$port_tcp" =~ $NUM_RE ]] && [[ "$port_udp" =~ $NUM_RE ]] && [[ "$port_tcp" -eq "$port_udp" ]]; then
+    
+    # Reset fail counter on success
+    if [[ $NATPMPC_FAILS -gt 0 ]]; then
+      log "Connection restored after $NATPMPC_FAILS failures."
+      PREV_PORT="0" # Force an update just in case qBit dropped it
+      NATPMPC_FAILS=0
+    fi
+
+    # Update if the port changed
+    if [[ "$port_tcp" != "$PREV_PORT" ]]; then
+      update_qbittorrent "$port_tcp"
+    fi
+
+  else
+    log "Failed to map port. NATPMP output -> TCP: ${port_tcp:-none}, UDP: ${port_udp:-none}"
+    ((NATPMPC_FAILS++))
+    
+    # Alert exactly on the 5th failure
+    if [[ $NATPMPC_FAILS -eq 5 ]]; then
+      notify "qBittorrent Port Error" "NATPMPC mapping failed 5 times in a row. Response: $output_tcp $output_udp"
+    fi
+  fi
+
+  # Wait before renewing (interruptible by trap)
+  sleep "$RENEWAL_INTERVAL" &
+  wait $!
+done

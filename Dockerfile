@@ -14,6 +14,7 @@ FROM alpine:3.22
 
 # Exit if one of the cont-init.d scripts fails
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+ENV S6_STAGE2_HOOK=/scripts/helper/setup-custom-s6.sh
 
 RUN \
     # Install tools
