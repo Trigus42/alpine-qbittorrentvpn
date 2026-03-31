@@ -26,6 +26,16 @@ process_components() {
                 [[ -f "${target}/up" ]] && chmod +x "${target}/up"
                 [[ -f "${target}/down" ]] && chmod +x "${target}/down"
                 
+                # If it's a oneshot, s6-rc expects `up` to be an execline script.
+                # If the user provided a bash/shell script with a shebang to `run`, we use it
+                if [[ -f "${target}/type" ]] && [[ "$(cat "${target}/type")" == "oneshot" ]]; then
+                    if [[ ! -f "${target}/up" ]] && [[ -f "${target}/run" ]]; then
+                        echo "[custom-s6] Creating up wrapper for ${name} using run script..."
+                        echo -e "/etc/s6-overlay/s6-rc.d/${name}/run" > "${target}/up"
+                        chmod +x "${target}/up"
+                    fi
+                fi
+                
                 # Add it to the requested bundle
                 mkdir -p "${S6_RC_DIR}/${bundle}/contents.d"
                 touch "${S6_RC_DIR}/${bundle}/contents.d/${name}"
