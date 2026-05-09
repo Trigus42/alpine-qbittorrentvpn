@@ -22,9 +22,13 @@ runs:
       id: qbt-release
       shell: bash
       run: |
-        if [ -z "${{ inputs.qbt_tag }}"]; then
+        if [ -z "${{ inputs.qbt_tag }}" ]; then
           echo "No qBittorrent tag provided, fetching latest release..."
-          RELEASE_TAG=$(curl -s https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
+          RELEASE_TAG=$(curl -sf https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest | jq -r '.tag_name')
+          if [ -z "$RELEASE_TAG" ] || [ "$RELEASE_TAG" = "null" ]; then
+            echo "::error::Failed to fetch qBittorrent release tag from GitHub API"
+            exit 1
+          fi
         else
           RELEASE_TAG=${{ inputs.qbt_tag }}
         fi
