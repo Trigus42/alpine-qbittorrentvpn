@@ -66,6 +66,10 @@ RUN \
 RUN \ 
     # Set exec permissions
     chmod +x -R /scripts/ /etc/s6-overlay && \
+    # Rename wg-quick to bypass AppArmor profile on Ubuntu 25.10+
+    # Ubuntu ships an AppArmor profile for wg-quick that blocks readlink
+    # via BusyBox symlinks inside Alpine containers
+    mv /usr/bin/wg-quick /usr/bin/wg-quick-custom && \
     # Remove temporary files
     rm -r /tmp/*
 

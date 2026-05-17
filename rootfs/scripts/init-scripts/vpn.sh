@@ -166,7 +166,7 @@ fi
 
 if [[ "${VPN_TYPE}" == "wireguard" ]]; then
     # shellcheck disable=SC2016
-    sed -i -E 's/\[\[ \$proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' "$(command -v wg-quick)"
+    sed -i -E 's/\[\[ \$proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1//gm' "$(command -v wg-quick-custom)"
 fi
 
 ##########
@@ -262,7 +262,7 @@ if [[ $VPN_ENABLED != "no" ]]; then
 	else
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Starting WireGuard..."
 		echo "--------------------"
-		wg-quick up "$VPN_CONFIG"
+		wg-quick-custom up "$VPN_CONFIG"
 		echo "--------------------"
 	fi
 fi
