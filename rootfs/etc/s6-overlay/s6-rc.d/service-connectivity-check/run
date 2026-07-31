@@ -1,0 +1,5 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# exec so the script is the s6-supervised process (direct SIGTERM on shutdown).
+exec /scripts/service-scripts/connectivity-check.sh

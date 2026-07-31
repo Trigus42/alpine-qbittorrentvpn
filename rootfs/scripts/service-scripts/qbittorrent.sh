@@ -4,36 +4,20 @@
 # shellcheck disable=SC1091
 source /scripts/helper/functions.sh
 
-USER=${PUID}
-GROUP=${PGID}
-
 QBITTORRENTLOGPATH="/config/qBittorrent/data/logs"
 QBITTORRENTLOG="qbittorrent.log"
 DAEMON="qbittorrent-nox"
-DAEMON_ARGS="--profile=/config"
-DAEMONSTRING="$DAEMON $DAEMON_ARGS >> $QBITTORRENTLOGPATH/$QBITTORRENTLOG 2>&1"
 
 umask "${UMASK}"
 
-# Check if log path exists. If it doesn't exist, create it.
-if [ ! -e $QBITTORRENTLOGPATH ]; then
-	mkdir -p $QBITTORRENTLOGPATH
+# qBittorrent writes its own log here; its stdout/stderr stays attached to the
+# s6 service so startup crashes are visible in the container log.
+if [ ! -e "$QBITTORRENTLOGPATH" ]; then
+	mkdir -p "$QBITTORRENTLOGPATH"
 	chown -R "${PUID}":"${PGID}" /config/qBittorrent
 fi
 
-# Check for log file. If it doesn't exist, create it.
-if [ -f $QBITTORRENTLOGPATH/$QBITTORRENTLOG ]; then
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Logging to $QBITTORRENTLOGPATH/$QBITTORRENTLOG."
-else
-	echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Log file $QBITTORRENTLOGPATH/$QBITTORRENTLOG doesn't exist. Creating it..."
-	touch "$QBITTORRENTLOGPATH/$QBITTORRENTLOG"
-	if [ -f "$QBITTORRENTLOGPATH/$QBITTORRENTLOG" ]; then
-		chown "$USER":"$GROUP" $QBITTORRENTLOGPATH/$QBITTORRENTLOG
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Logfile created. Logging to $QBITTORRENTLOGPATH/$QBITTORRENTLOG"
-	else
-		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Couldn't create logfile $QBITTORRENTLOGPATH/$QBITTORRENTLOG"
-	fi
-fi
+echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] qBittorrent writes its own log to $QBITTORRENTLOGPATH/$QBITTORRENTLOG. Startup/crash output is shown below and in the container log."
 
 # Check if it is possible to bypass the VPN
 if [[ $VPN_ENABLED != "no" ]]; then
@@ -51,4 +35,6 @@ if [[ $VPN_ENABLED != "no" ]]; then
 	fi
 fi
 
-exec s6-setuidgid "$(getent passwd "$PUID" | cut -d: -f1)" /bin/bash -c "$DAEMONSTRING"
+# Exec directly (no wrapping shell) so qbittorrent-nox is the process s6
+# supervises and receives SIGTERM on shutdown, exiting cleanly.
+exec s6-setuidgid "$(getent passwd "$PUID" | cut -d: -f1)" "$DAEMON" --profile=/config

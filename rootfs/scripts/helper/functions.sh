@@ -35,10 +35,12 @@ test_connection () {
 }
 
 stop_container() {
+    # Kill-switch trip: stop fast and stay down (no restart) to prevent leaks.
     s6-svc -k -d /run/service/service-qbittorrent/ >/dev/null 2>&1
-    s6-svc -k -d /run/service/service-healthcheck/ >/dev/null 2>&1
+    s6-svc -k -d /run/service/service-firewall-check/ >/dev/null 2>&1
+    s6-svc -k -d /run/service/service-connectivity-check/ >/dev/null 2>&1
 
-    # Killing the service doesn't kill the qbittorrent-nox child process
+    # Ensure no qbittorrent-nox survives the service kill.
     killall qbittorrent-nox >/dev/null 2>&1
 
     sleep infinity

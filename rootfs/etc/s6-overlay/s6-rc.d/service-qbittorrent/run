@@ -1,4 +1,5 @@
 #!/command/with-contenv bash
 # shellcheck shell=bash
 
-/scripts/service-scripts/qbittorrent.sh
+# exec so qbittorrent-nox ends up as the s6-supervised process (clean SIGTERM).
+exec /scripts/service-scripts/qbittorrent.sh

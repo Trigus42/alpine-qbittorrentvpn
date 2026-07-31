@@ -8,6 +8,19 @@ mkdir -p /config/qBittorrent/config
 # Set the rights on the /config/qBittorrent
 chown -R "${PUID}":"${PGID}" /config/qBittorrent
 
+# Remove stale lock/socket files from an unclean shutdown; qBittorrent >= 5.2
+# refuses to start while they exist.
+for stale in \
+	"/config/qBittorrent/config/lockfile" \
+	"/config/qBittorrent/config/ipc-socket" \
+	"/config/qBittorrent/data/lockfile" \
+	"/config/qBittorrent/data/ipc-socket"; do
+	if [ -e "$stale" ]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') [WARNING] Removing stale $stale; previous shutdown was unclean."
+		rm -f "$stale"
+	fi
+done
+
 # Set the rights on the /downloads folder
 if [[ $DOWNLOAD_DIR_CHOWN != "no" ]]; then
 	chown -R "${PUID}":"${PGID}" /downloads
