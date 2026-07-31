@@ -48,8 +48,11 @@ fi
 # OpenVPN credentails
 
 if [[ "${VPN_TYPE}" == "openvpn" ]]; then
-    # Remove auth-user-pass line(s) from VPN config
-    sed -i -E 's/auth-user-pass.*//g' "${VPN_CONFIG}"
+    # Remove auth-user-pass line(s) so credentials come only from the file/CLI,
+    # never an interactive prompt. Rewrite in place (not `sed -i`, whose rename
+    # fails with EBUSY when the config is a bind-mounted file).
+    vpn_config_stripped="$(sed -E 's/auth-user-pass.*//g' "${VPN_CONFIG}")"
+    printf '%s\n' "${vpn_config_stripped}" > "${VPN_CONFIG}"
     # Use credentials from credentials file if it exists
     if [[ -f /config/openvpn/"${VPN_CONFIG_NAME}"_credentials.conf ]]; then
         echo "$(date +'%Y-%m-%d %H:%M:%S') [INFO] Using credentials from /config/openvpn/${VPN_CONFIG_NAME}_credentials.conf"
