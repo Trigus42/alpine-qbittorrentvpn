@@ -235,10 +235,11 @@ fi
 IFS=',' read -ra name_server_list <<< "${NAME_SERVERS}"
 
 resolver_lines=()
+existing_resolver_lines=()
 
 # Preserve existing nameserver entries for Docker/Kubernetes DNS setups.
 while IFS= read -r resolver_line; do
-	resolver_lines+=("${resolver_line}")
+	existing_resolver_lines+=("${resolver_line}")
 done < <(grep -E '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || true)
 
 # Process name servers in the list
@@ -254,6 +255,11 @@ for name_server_item in "${name_server_list[@]}"; do
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Adding ${name_server_item} to resolv.conf"
 	fi
 	resolver_lines+=("nameserver ${name_server_item}")
+done
+
+# Keep original resolvers as fallback entries.
+for existing_resolver_line in "${existing_resolver_lines[@]}"; do
+	resolver_lines+=("${existing_resolver_line}")
 done
 
 if command -v resolvconf > /dev/null 2>&1; then
