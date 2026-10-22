@@ -234,16 +234,36 @@ fi
 # Split comma seperated string into list from NAME_SERVERS env variable
 IFS=',' read -ra name_server_list <<< "${NAME_SERVERS}"
 
+resolver_lines=()
+
+# Preserve existing nameserver entries for Docker/Kubernetes DNS setups.
+while IFS= read -r resolver_line; do
+	resolver_lines+=("${resolver_line}")
+done < <(grep -E '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || true)
+
 # Process name servers in the list
 for name_server_item in "${name_server_list[@]}"; do
 	# strip whitespace from start and end of name_server_item
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
+	if [[ -z "${name_server_item}" ]]; then
+		continue
+	fi
+
 	if [[ "$DEBUG" == "yes" ]]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') [DEBUG] Adding ${name_server_item} to resolv.conf"
 	fi
-	echo "nameserver ${name_server_item}" >> /etc/resolv.conf
+	resolver_lines+=("nameserver ${name_server_item}")
 done
+
+if command -v resolvconf > /dev/null 2>&1; then
+	printf '%s\n' "${resolver_lines[@]}" | resolvconf -a qbittorrentvpn
+	resolvconf -u
+else
+	for resolver_line in "${resolver_lines[@]}"; do
+		echo "${resolver_line}" >> /etc/resolv.conf
+	done
+fi
 
 ##########
 # Save envirnonment variables
